@@ -57,6 +57,20 @@ This experiment does not include:
 - MIDI over TRS or DIN;
 - product design or custom hardware.
 
+## Prior art
+
+BLE MIDI reception has previously been demonstrated on the original
+M5Stack and M5StickC:
+
+- [M5Stack BLE MIDI receiver (2018)](https://qiita.com/KazuyukiEguchi/items/e166ede5c97438b90187)
+- [M5StickC BLE MIDI receiver (2020)](https://lang-ship.com/blog/work/m5stickc-esp32-ble-midi/)
+- [Bidirectional M5StickC BLE MIDI experiment (2020)](https://pointofviewpoint.linclip.com/archives/3005)
+
+These experiments establish basic feasibility. This repository focuses
+on a reproducible M5StickC Plus2 implementation using current libraries,
+structured MIDI event handling, connection recovery, and explicit
+success criteria.
+
 ## Development
 
 Use PlatformIO with the Arduino framework.
