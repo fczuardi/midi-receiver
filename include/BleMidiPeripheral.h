@@ -1,19 +1,14 @@
 #pragma once
 
-#include <BLECharacteristic.h>
-#include <BLEServer.h>
-
-#include <array>
 #include <atomic>
-#include <mutex>
 
 #include "AppState.h"
 
 // Owns BLE setup for this firmware.
 //
-// For now this class advertises the BLE MIDI service and reports raw packet
-// activity. Parsing MIDI commands will be added as a separate, reviewable slice.
-class BleMidiPeripheral : private BLEServerCallbacks, private BLECharacteristicCallbacks {
+// This class wraps the Arduino BLE-MIDI library so the rest of the app does not
+// depend directly on its global MIDI objects and callback API.
+class BleMidiPeripheral {
 public:
   explicit BleMidiPeripheral(AppState& appState);
 
@@ -25,28 +20,26 @@ public:
   void update();
 
 private:
-  void onConnect(BLEServer* server) override;
-  void onDisconnect(BLEServer* server) override;
-  void onWrite(BLECharacteristic* characteristic) override;
+  static void handleConnected();
+  static void handleDisconnected();
+  static void handleActiveSensing();
+  static void handleNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
+  static void handleNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
 
-  void createMidiService();
-  void startAdvertising();
-  void applyPendingMidiPacketActivity();
-  void printLastMidiPacketBytes(const uint8_t* packetBytes, size_t byteCount, bool wasTruncated) const;
+  static BleMidiPeripheral* activeInstance_;
+
+  void noteReceived(MidiActivityKind kind, uint8_t channel, uint8_t note, uint8_t velocity);
+  void activeSensingReceived();
+  void applyPendingMidiActivity();
 
   AppState& appState_;
-  BLEServer* server_ = nullptr;
-  BLECharacteristic* midiDataCharacteristic_ = nullptr;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
-
-  static constexpr size_t MAX_CAPTURED_MIDI_PACKET_BYTES = 32;
-
-  std::mutex pendingMidiPacketMutex_;
-  uint32_t pendingMidiPacketCount_ = 0;
-  size_t pendingLastMidiPacketSize_ = 0;
-  uint32_t pendingLastMidiPacketAtMs_ = 0;
-  size_t pendingCapturedMidiPacketByteCount_ = 0;
-  bool pendingMidiPacketWasTruncated_ = false;
-  std::array<uint8_t, MAX_CAPTURED_MIDI_PACKET_BYTES> pendingCapturedMidiPacketBytes_{};
+  std::atomic<uint32_t> pendingActiveSensingCount_{0};
+  std::atomic<uint32_t> pendingNoteEventCount_{0};
+  std::atomic<uint8_t> pendingNoteEventKind_{static_cast<uint8_t>(MidiActivityKind::None)};
+  std::atomic<uint8_t> pendingNoteChannel_{0};
+  std::atomic<uint8_t> pendingNoteNumber_{0};
+  std::atomic<uint8_t> pendingNoteVelocity_{0};
+  std::atomic<uint32_t> pendingMidiActivityAtMs_{0};
 };

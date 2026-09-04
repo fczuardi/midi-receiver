@@ -8,6 +8,8 @@ constexpr int32_t BLE_ROW_Y = 27;
 constexpr int32_t UPTIME_ROW_Y = 43;
 constexpr int32_t MIDI_PACKETS_ROW_Y = 59;
 constexpr int32_t MIDI_BYTES_ROW_Y = 75;
+constexpr int32_t MIDI_NOTE_ROW_Y = 91;
+constexpr int32_t MIDI_VELOCITY_ROW_Y = 107;
 
 constexpr int32_t LABEL_COLUMN_X = 0;
 constexpr int32_t VALUE_COLUMN_X = 96;
@@ -54,10 +56,16 @@ void DisplayView::drawStaticLayout(const AppState& appState) {
   M5.Display.print("Uptime: ");
 
   M5.Display.setCursor(LABEL_COLUMN_X, MIDI_PACKETS_ROW_Y);
-  M5.Display.print("MIDI packets: ");
+  M5.Display.print("MIDI msgs: ");
 
   M5.Display.setCursor(LABEL_COLUMN_X, MIDI_BYTES_ROW_Y);
-  M5.Display.print("Last bytes: ");
+  M5.Display.print("Last: ");
+
+  M5.Display.setCursor(LABEL_COLUMN_X, MIDI_NOTE_ROW_Y);
+  M5.Display.print("Note: ");
+
+  M5.Display.setCursor(LABEL_COLUMN_X, MIDI_VELOCITY_ROW_Y);
+  M5.Display.print("Velocity: ");
 }
 
 void DisplayView::drawUptimeValue(const AppState& appState) {
@@ -87,7 +95,7 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
   M5.Display.setCursor(VALUE_COLUMN_X, MIDI_PACKETS_ROW_Y);
   M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
   M5.Display.setTextSize(1);
-  M5.Display.print(appState.receivedMidiPacketCount());
+  M5.Display.print(appState.receivedMidiMessageCount());
 
   M5.Display.fillRect(
       VALUE_COLUMN_X,
@@ -96,7 +104,52 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
       VALUE_ROW_HEIGHT,
       TFT_BLACK);
   M5.Display.setCursor(VALUE_COLUMN_X, MIDI_BYTES_ROW_Y);
-  M5.Display.print(appState.lastMidiPacketSize());
+  M5.Display.print(midiActivityLabel(appState.lastMidiActivityKind()));
+
+  M5.Display.fillRect(
+      VALUE_COLUMN_X,
+      MIDI_NOTE_ROW_Y,
+      VALUE_COLUMN_WIDTH,
+      VALUE_ROW_HEIGHT,
+      TFT_BLACK);
+  M5.Display.setCursor(VALUE_COLUMN_X, MIDI_NOTE_ROW_Y);
+  if (appState.lastMidiActivityKind() == MidiActivityKind::NoteOn ||
+      appState.lastMidiActivityKind() == MidiActivityKind::NoteOff) {
+    M5.Display.print(appState.lastMidiNote());
+    M5.Display.print(" ch ");
+    M5.Display.print(appState.lastMidiChannel());
+  } else {
+    M5.Display.print("-");
+  }
+
+  M5.Display.fillRect(
+      VALUE_COLUMN_X,
+      MIDI_VELOCITY_ROW_Y,
+      VALUE_COLUMN_WIDTH,
+      VALUE_ROW_HEIGHT,
+      TFT_BLACK);
+  M5.Display.setCursor(VALUE_COLUMN_X, MIDI_VELOCITY_ROW_Y);
+  if (appState.lastMidiActivityKind() == MidiActivityKind::NoteOn ||
+      appState.lastMidiActivityKind() == MidiActivityKind::NoteOff) {
+    M5.Display.print(appState.lastMidiVelocity());
+  } else {
+    M5.Display.print("-");
+  }
+}
+
+const char* DisplayView::midiActivityLabel(MidiActivityKind kind) const {
+  switch (kind) {
+    case MidiActivityKind::None:
+      return "none";
+    case MidiActivityKind::ActiveSensing:
+      return "active";
+    case MidiActivityKind::NoteOn:
+      return "note on";
+    case MidiActivityKind::NoteOff:
+      return "note off";
+  }
+
+  return "unknown";
 }
 
 const char* DisplayView::bleStateLabel(BleConnectionState state) const {

@@ -8,16 +8,32 @@ uint32_t AppState::uptimeSeconds() const {
   return uptimeSeconds_;
 }
 
-uint32_t AppState::receivedMidiPacketCount() const {
-  return receivedMidiPacketCount_;
+uint32_t AppState::receivedMidiMessageCount() const {
+  return receivedMidiMessageCount_;
 }
 
-size_t AppState::lastMidiPacketSize() const {
-  return lastMidiPacketSize_;
+uint32_t AppState::activeSensingMessageCount() const {
+  return activeSensingMessageCount_;
 }
 
-uint32_t AppState::lastMidiPacketAtMs() const {
-  return lastMidiPacketAtMs_;
+MidiActivityKind AppState::lastMidiActivityKind() const {
+  return lastMidiActivityKind_;
+}
+
+uint8_t AppState::lastMidiChannel() const {
+  return lastMidiChannel_;
+}
+
+uint8_t AppState::lastMidiNote() const {
+  return lastMidiNote_;
+}
+
+uint8_t AppState::lastMidiVelocity() const {
+  return lastMidiVelocity_;
+}
+
+uint32_t AppState::lastMidiActivityAtMs() const {
+  return lastMidiActivityAtMs_;
 }
 
 bool AppState::fullDisplayRefreshNeeded() const {
@@ -50,10 +66,23 @@ void AppState::setUptimeSeconds(uint32_t uptimeSeconds) {
   uptimeRefreshNeeded_ = true;
 }
 
-void AppState::recordMidiPacketActivity(size_t packetSize, uint32_t packetReceivedAtMs) {
-  receivedMidiPacketCount_ += 1;
-  lastMidiPacketSize_ = packetSize;
-  lastMidiPacketAtMs_ = packetReceivedAtMs;
+void AppState::recordMidiActivity(
+    MidiActivityKind kind,
+    uint8_t channel,
+    uint8_t note,
+    uint8_t velocity,
+    uint32_t activityAtMs) {
+  receivedMidiMessageCount_ += 1;
+  lastMidiActivityKind_ = kind;
+  lastMidiChannel_ = channel;
+  lastMidiNote_ = note;
+  lastMidiVelocity_ = velocity;
+  lastMidiActivityAtMs_ = activityAtMs;
+
+  if (kind == MidiActivityKind::ActiveSensing) {
+    activeSensingMessageCount_ += 1;
+  }
+
   midiActivityRefreshNeeded_ = true;
 }
 
