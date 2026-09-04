@@ -1,29 +1,17 @@
 #include <Arduino.h>
 #include <M5Unified.h>
 
+#include "AppState.h"
+#include "BleMidiPeripheral.h"
+#include "DisplayView.h"
+
 namespace {
-constexpr uint32_t SCREEN_REFRESH_MS = 1000;
+constexpr uint32_t UPTIME_REFRESH_INTERVAL_MS = 1000;
 
-uint32_t lastScreenRefreshMs = 0;
-
-void drawStatusScreen() {
-  const uint32_t uptimeSeconds = millis() / 1000;
-
-  M5.Display.fillScreen(TFT_BLACK);
-  M5.Display.setCursor(0, 0);
-  M5.Display.setTextColor(TFT_GREEN, TFT_BLACK);
-  M5.Display.setTextSize(2);
-  M5.Display.println("BLE MIDI RX");
-
-  M5.Display.setTextColor(TFT_WHITE, TFT_BLACK);
-  M5.Display.setTextSize(1);
-  M5.Display.println();
-  M5.Display.println("Baseline firmware");
-  M5.Display.println("Status: booted");
-  M5.Display.printf("Uptime: %lu s\n", uptimeSeconds);
-  M5.Display.println();
-  M5.Display.println("Next: BLE MIDI");
-}
+AppState appState;
+DisplayView displayView;
+BleMidiPeripheral bleMidiPeripheral(appState);
+uint32_t lastUptimeRefreshMs = 0;
 }
 
 void setup() {
@@ -33,23 +21,27 @@ void setup() {
   Serial.begin(115200);
   delay(200);
 
-  M5.Display.setRotation(1);
-  M5.Display.setBrightness(96);
+  displayView.begin();
 
   Serial.println();
   Serial.println("M5StickC Plus2 BLE MIDI receiver");
-  Serial.println("Baseline firmware booted");
+  Serial.println("Firmware booted");
 
-  drawStatusScreen();
+  bleMidiPeripheral.begin();
+  displayView.update(appState);
 }
 
 void loop() {
   M5.update();
+  bleMidiPeripheral.update();
 
   const uint32_t nowMs = millis();
-  if (nowMs - lastScreenRefreshMs >= SCREEN_REFRESH_MS) {
-    lastScreenRefreshMs = nowMs;
-    drawStatusScreen();
+  if (nowMs - lastUptimeRefreshMs >= UPTIME_REFRESH_INTERVAL_MS) {
+    lastUptimeRefreshMs = nowMs;
+    appState.setUptimeSeconds(nowMs / 1000);
     Serial.printf("uptime=%lu\n", nowMs / 1000);
   }
+
+  displayView.update(appState);
+  appState.markDisplayRefreshed();
 }
