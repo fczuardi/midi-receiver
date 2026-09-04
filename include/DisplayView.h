@@ -17,5 +17,6 @@ public:
 private:
   void drawStaticLayout(const AppState& appState);
   void drawUptimeValue(const AppState& appState);
+  void drawMidiActivityValues(const AppState& appState);
   const char* bleStateLabel(BleConnectionState state) const;
 };
