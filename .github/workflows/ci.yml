@@ -1,0 +1,49 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+env:
+  PLATFORMIO_CORE_DIR: .platformio-home
+
+jobs:
+  firmware-build:
+    name: Firmware build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache PlatformIO packages
+        uses: actions/cache@v4
+        with:
+          path: .platformio-home
+          key: platformio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'boards/*.json') }}
+          restore-keys: |
+            platformio-${{ runner.os }}-
+
+      - name: Install PlatformIO
+        run: pip install platformio==6.1.19
+
+      - name: Build firmware
+        run: pio run
+
+      - name: Upload firmware artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: m5stick-cplus2-firmware
+          path: |
+            .pio/build/m5stick-cplus2/firmware.bin
+            .pio/build/m5stick-cplus2/bootloader.bin
+            .pio/build/m5stick-cplus2/partitions.bin
+          if-no-files-found: error
+
