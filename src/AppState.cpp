@@ -8,8 +8,12 @@ uint32_t AppState::uptimeSeconds() const {
   return uptimeSeconds_;
 }
 
-bool AppState::displayRefreshNeeded() const {
-  return displayRefreshNeeded_;
+bool AppState::fullDisplayRefreshNeeded() const {
+  return fullDisplayRefreshNeeded_;
+}
+
+bool AppState::uptimeRefreshNeeded() const {
+  return uptimeRefreshNeeded_;
 }
 
 void AppState::setBleConnectionState(BleConnectionState state) {
@@ -18,7 +22,7 @@ void AppState::setBleConnectionState(BleConnectionState state) {
   }
 
   bleConnectionState_ = state;
-  displayRefreshNeeded_ = true;
+  fullDisplayRefreshNeeded_ = true;
 }
 
 void AppState::setUptimeSeconds(uint32_t uptimeSeconds) {
@@ -27,10 +31,10 @@ void AppState::setUptimeSeconds(uint32_t uptimeSeconds) {
   }
 
   uptimeSeconds_ = uptimeSeconds;
-  displayRefreshNeeded_ = true;
+  uptimeRefreshNeeded_ = true;
 }
 
 void AppState::markDisplayRefreshed() {
-  displayRefreshNeeded_ = false;
+  fullDisplayRefreshNeeded_ = false;
+  uptimeRefreshNeeded_ = false;
 }
-

@@ -19,8 +19,11 @@ public:
   // Return the number of seconds since the firmware booted.
   uint32_t uptimeSeconds() const;
 
-  // Tell the display layer whether anything changed since the last redraw.
-  bool displayRefreshNeeded() const;
+  // Tell the display layer whether the static layout must be redrawn.
+  bool fullDisplayRefreshNeeded() const;
+
+  // Tell the display layer whether only the uptime value changed.
+  bool uptimeRefreshNeeded() const;
 
   // Update BLE state and request a display redraw when the value changes.
   void setBleConnectionState(BleConnectionState state);
@@ -28,11 +31,12 @@ public:
   // Update uptime and request a display redraw when the value changes.
   void setUptimeSeconds(uint32_t uptimeSeconds);
 
-  // Clear the redraw flag after the display has rendered the latest state.
+  // Clear display refresh flags after the display has rendered the latest state.
   void markDisplayRefreshed();
 
 private:
   BleConnectionState bleConnectionState_ = BleConnectionState::Starting;
   uint32_t uptimeSeconds_ = 0;
-  bool displayRefreshNeeded_ = true;
+  bool fullDisplayRefreshNeeded_ = true;
+  bool uptimeRefreshNeeded_ = true;
 };
