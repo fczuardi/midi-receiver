@@ -11,9 +11,13 @@ different MIDI channels.
 The tracker handles common edge cases:
 
 - duplicate Note On does not double-count a note;
+- Note On with velocity 0 is treated defensively as Note Off;
 - Note Off for an inactive note does not make the count negative;
 - eight simultaneous notes are tracked;
+- the active-note table stops at 32 notes and counts overflow events;
 - disconnect cleanup clears every held note.
+- pending note events are discarded on disconnect so stale Note On messages do
+  not recreate held notes after cleanup.
 
 The BLE callback bridge now keeps a bounded queue of pending note events instead
 of storing only the most recent one. That is important for chords: if several

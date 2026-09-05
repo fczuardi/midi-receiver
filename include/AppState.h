@@ -1,6 +1,7 @@
 #pragma once
 
-#include <Arduino.h>
+#include <cstddef>
+#include <cstdint>
 
 #include "ActiveNotes.h"
 
@@ -33,6 +34,10 @@ public:
 
   // Return how many Active Sensing messages have arrived since boot.
   uint32_t activeSensingMessageCount() const;
+
+  // Return how many Note On events were ignored because the active-note table
+  // was already full.
+  uint32_t droppedActiveNoteCount() const;
 
   // Return the kind of the most recent parsed MIDI activity.
   MidiActivityKind lastMidiActivityKind() const;
@@ -68,6 +73,8 @@ public:
   void setUptimeSeconds(uint32_t uptimeSeconds);
 
   // Record a parsed MIDI activity event produced by the MIDI library.
+  // A Note On with velocity 0 is normalized to Note Off here as a defensive
+  // MIDI convention, even though the MIDI library is expected to do this too.
   void recordMidiActivity(
       MidiActivityKind kind,
       uint8_t channel,
@@ -83,6 +90,7 @@ private:
   uint32_t uptimeSeconds_ = 0;
   uint32_t receivedMidiMessageCount_ = 0;
   uint32_t activeSensingMessageCount_ = 0;
+  uint32_t droppedActiveNoteCount_ = 0;
   MidiActivityKind lastMidiActivityKind_ = MidiActivityKind::None;
   uint8_t lastMidiChannel_ = 0;
   uint8_t lastMidiNote_ = 0;

@@ -41,9 +41,11 @@ private:
   void noteReceived(MidiActivityKind kind, uint8_t channel, uint8_t note, uint8_t velocity);
   void activeSensingReceived();
   void applyPendingMidiActivity();
+  void discardPendingMidiActivity();
   bool enqueuePendingNoteEvent(const PendingNoteEvent& event);
 
   AppState& appState_;
+  bool connected_ = false;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
   std::atomic<uint32_t> pendingActiveSensingCount_{0};

@@ -36,19 +36,29 @@ void BleMidiPeripheral::begin() {
 }
 
 void BleMidiPeripheral::update() {
-  // MIDI.read() lets the FortySevenEffects MIDI parser consume bytes delivered
-  // by the BLE-MIDI transport and call our note/real-time handlers.
-  MIDI.read();
-
-  if (connectionStarted_.exchange(false)) {
-    appState_.setBleConnectionState(BleConnectionState::Connected);
-  }
-
+  // Handle disconnect before reading more MIDI. If the sender disappeared in
+  // the middle of a chord, pending Note On events must not recreate held notes
+  // after AppState clears them.
   if (connectionEnded_.exchange(false)) {
+    connected_ = false;
+    discardPendingMidiActivity();
     appState_.setBleConnectionState(BleConnectionState::Advertising);
     appState_.clearActiveNotes();
   }
 
+  if (connectionStarted_.exchange(false)) {
+    connected_ = true;
+    appState_.setBleConnectionState(BleConnectionState::Connected);
+  }
+
+  if (!connected_) {
+    discardPendingMidiActivity();
+    return;
+  }
+
+  // MIDI.read() lets the FortySevenEffects MIDI parser consume bytes delivered
+  // by the BLE-MIDI transport and call our note/real-time handlers.
+  MIDI.read();
   applyPendingMidiActivity();
 }
 
@@ -176,6 +186,15 @@ void BleMidiPeripheral::applyPendingMidiActivity() {
     Serial.print("MIDI RX: dropped_note_events=");
     Serial.println(droppedNoteEvents);
   }
+}
+
+void BleMidiPeripheral::discardPendingMidiActivity() {
+  pendingActiveSensingCount_.store(0);
+  pendingMidiActivityAtMs_.store(0);
+  droppedPendingNoteEventCount_.store(0);
+
+  std::lock_guard<std::mutex> lock(pendingNoteEventMutex_);
+  pendingNoteEventCount_ = 0;
 }
 
 bool BleMidiPeripheral::enqueuePendingNoteEvent(const PendingNoteEvent& event) {

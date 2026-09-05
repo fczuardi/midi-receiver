@@ -59,6 +59,18 @@ void test_chord_with_eight_notes_is_tracked() {
   }
 }
 
+void test_note_limit_rejects_thirty_third_note() {
+  ActiveNotes activeNotes;
+
+  for (uint8_t note = 0; note < ActiveNotes::MAX_ACTIVE_NOTES; ++note) {
+    TEST_ASSERT_TRUE(activeNotes.noteOn(1, note));
+  }
+
+  TEST_ASSERT_EQUAL(ActiveNotes::MAX_ACTIVE_NOTES, activeNotes.count());
+  TEST_ASSERT_FALSE(activeNotes.noteOn(1, ActiveNotes::MAX_ACTIVE_NOTES));
+  TEST_ASSERT_EQUAL(ActiveNotes::MAX_ACTIVE_NOTES, activeNotes.count());
+}
+
 void test_clear_removes_all_active_notes() {
   ActiveNotes activeNotes;
 
@@ -82,6 +94,7 @@ int main() {
   RUN_TEST(test_note_off_removes_active_note);
   RUN_TEST(test_unknown_note_off_does_not_change_count);
   RUN_TEST(test_chord_with_eight_notes_is_tracked);
+  RUN_TEST(test_note_limit_rejects_thirty_third_note);
   RUN_TEST(test_clear_removes_all_active_notes);
   return UNITY_END();
 }
