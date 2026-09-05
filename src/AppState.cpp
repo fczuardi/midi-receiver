@@ -36,6 +36,14 @@ uint32_t AppState::lastMidiActivityAtMs() const {
   return lastMidiActivityAtMs_;
 }
 
+size_t AppState::activeNoteCount() const {
+  return activeNotes_.count();
+}
+
+ActiveNote AppState::activeNoteAt(size_t index) const {
+  return activeNotes_.noteAt(index);
+}
+
 bool AppState::fullDisplayRefreshNeeded() const {
   return fullDisplayRefreshNeeded_;
 }
@@ -55,6 +63,15 @@ void AppState::setBleConnectionState(BleConnectionState state) {
 
   bleConnectionState_ = state;
   fullDisplayRefreshNeeded_ = true;
+}
+
+void AppState::clearActiveNotes() {
+  if (activeNotes_.count() == 0) {
+    return;
+  }
+
+  activeNotes_.clear();
+  midiActivityRefreshNeeded_ = true;
 }
 
 void AppState::setUptimeSeconds(uint32_t uptimeSeconds) {
@@ -81,6 +98,10 @@ void AppState::recordMidiActivity(
 
   if (kind == MidiActivityKind::ActiveSensing) {
     activeSensingMessageCount_ += 1;
+  } else if (kind == MidiActivityKind::NoteOn) {
+    activeNotes_.noteOn(channel, note);
+  } else if (kind == MidiActivityKind::NoteOff) {
+    activeNotes_.noteOff(channel, note);
   }
 
   midiActivityRefreshNeeded_ = true;

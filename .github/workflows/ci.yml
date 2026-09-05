@@ -34,6 +34,9 @@ jobs:
       - name: Install PlatformIO
         run: pip install platformio==6.1.19
 
+      - name: Run native unit tests
+        run: pio test -e native
+
       - name: Build firmware
         run: pio run
 
@@ -46,4 +49,3 @@ jobs:
             .pio/build/m5stick-cplus2/bootloader.bin
             .pio/build/m5stick-cplus2/partitions.bin
           if-no-files-found: error
-

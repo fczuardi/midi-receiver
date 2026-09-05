@@ -46,6 +46,7 @@ void BleMidiPeripheral::update() {
 
   if (connectionEnded_.exchange(false)) {
     appState_.setBleConnectionState(BleConnectionState::Advertising);
+    appState_.clearActiveNotes();
   }
 
   applyPendingMidiActivity();
@@ -98,12 +99,16 @@ void BleMidiPeripheral::noteReceived(
     uint8_t channel,
     uint8_t note,
     uint8_t velocity) {
-  pendingNoteEventKind_.store(static_cast<uint8_t>(kind));
-  pendingNoteChannel_.store(channel);
-  pendingNoteNumber_.store(note);
-  pendingNoteVelocity_.store(velocity);
-  pendingMidiActivityAtMs_.store(millis());
-  pendingNoteEventCount_.fetch_add(1);
+  PendingNoteEvent event;
+  event.kind = kind;
+  event.channel = channel;
+  event.note = note;
+  event.velocity = velocity;
+  event.activityAtMs = millis();
+
+  if (!enqueuePendingNoteEvent(event)) {
+    droppedPendingNoteEventCount_.fetch_add(1);
+  }
 }
 
 void BleMidiPeripheral::activeSensingReceived() {
@@ -129,31 +134,57 @@ void BleMidiPeripheral::applyPendingMidiActivity() {
     Serial.println(appState_.receivedMidiMessageCount());
   }
 
-  const uint32_t noteEventCount = pendingNoteEventCount_.exchange(0);
+  std::array<PendingNoteEvent, MAX_PENDING_NOTE_EVENTS> noteEvents{};
+  size_t noteEventCount = 0;
+
+  {
+    std::lock_guard<std::mutex> lock(pendingNoteEventMutex_);
+    noteEventCount = pendingNoteEventCount_;
+    noteEvents = pendingNoteEvents_;
+    pendingNoteEventCount_ = 0;
+  }
+
   if (noteEventCount == 0) {
     return;
   }
 
-  const auto kind = static_cast<MidiActivityKind>(pendingNoteEventKind_.load());
-  const uint8_t channel = pendingNoteChannel_.load();
-  const uint8_t note = pendingNoteNumber_.load();
-  const uint8_t velocity = pendingNoteVelocity_.load();
-  const uint32_t activityAtMs = pendingMidiActivityAtMs_.load();
+  for (size_t index = 0; index < noteEventCount; ++index) {
+    const PendingNoteEvent& event = noteEvents[index];
+    appState_.recordMidiActivity(
+        event.kind,
+        event.channel,
+        event.note,
+        event.velocity,
+        event.activityAtMs);
 
-  for (uint32_t index = 0; index < noteEventCount; ++index) {
-    appState_.recordMidiActivity(kind, channel, note, velocity, activityAtMs);
+    Serial.print("MIDI RX: ");
+    Serial.print(event.kind == MidiActivityKind::NoteOn ? "note_on" : "note_off");
+    Serial.print(" total=");
+    Serial.print(appState_.receivedMidiMessageCount());
+    Serial.print(" active=");
+    Serial.print(appState_.activeNoteCount());
+    Serial.print(" channel=");
+    Serial.print(event.channel);
+    Serial.print(" note=");
+    Serial.print(event.note);
+    Serial.print(" velocity=");
+    Serial.println(event.velocity);
   }
 
-  Serial.print("MIDI RX: ");
-  Serial.print(kind == MidiActivityKind::NoteOn ? "note_on" : "note_off");
-  Serial.print(" count=");
-  Serial.print(noteEventCount);
-  Serial.print(" total=");
-  Serial.print(appState_.receivedMidiMessageCount());
-  Serial.print(" channel=");
-  Serial.print(channel);
-  Serial.print(" note=");
-  Serial.print(note);
-  Serial.print(" velocity=");
-  Serial.println(velocity);
+  const uint32_t droppedNoteEvents = droppedPendingNoteEventCount_.exchange(0);
+  if (droppedNoteEvents > 0) {
+    Serial.print("MIDI RX: dropped_note_events=");
+    Serial.println(droppedNoteEvents);
+  }
+}
+
+bool BleMidiPeripheral::enqueuePendingNoteEvent(const PendingNoteEvent& event) {
+  std::lock_guard<std::mutex> lock(pendingNoteEventMutex_);
+  if (pendingNoteEventCount_ >= pendingNoteEvents_.size()) {
+    return false;
+  }
+
+  pendingNoteEvents_[pendingNoteEventCount_] = event;
+  pendingNoteEventCount_ += 1;
+  return true;
 }

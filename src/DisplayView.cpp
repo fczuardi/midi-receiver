@@ -2,6 +2,8 @@
 
 #include <M5Unified.h>
 
+#include <algorithm>
+
 namespace {
 constexpr int32_t TITLE_ROW_Y = 0;
 constexpr int32_t BLE_ROW_Y = 27;
@@ -10,11 +12,14 @@ constexpr int32_t MIDI_PACKETS_ROW_Y = 59;
 constexpr int32_t MIDI_BYTES_ROW_Y = 75;
 constexpr int32_t MIDI_NOTE_ROW_Y = 91;
 constexpr int32_t MIDI_VELOCITY_ROW_Y = 107;
+constexpr int32_t ACTIVE_NOTES_ROW_Y = 123;
 
 constexpr int32_t LABEL_COLUMN_X = 0;
 constexpr int32_t VALUE_COLUMN_X = 96;
 constexpr int32_t VALUE_COLUMN_WIDTH = 120;
 constexpr int32_t VALUE_ROW_HEIGHT = 12;
+
+constexpr size_t DISPLAYED_ACTIVE_NOTE_LIMIT = 8;
 }
 
 void DisplayView::begin() {
@@ -65,7 +70,10 @@ void DisplayView::drawStaticLayout(const AppState& appState) {
   M5.Display.print("Note: ");
 
   M5.Display.setCursor(LABEL_COLUMN_X, MIDI_VELOCITY_ROW_Y);
-  M5.Display.print("Velocity: ");
+  M5.Display.print("Vel/Active: ");
+
+  M5.Display.setCursor(LABEL_COLUMN_X, ACTIVE_NOTES_ROW_Y);
+  M5.Display.print("Held: ");
 }
 
 void DisplayView::drawUptimeValue(const AppState& appState) {
@@ -132,8 +140,36 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
   if (appState.lastMidiActivityKind() == MidiActivityKind::NoteOn ||
       appState.lastMidiActivityKind() == MidiActivityKind::NoteOff) {
     M5.Display.print(appState.lastMidiVelocity());
+    M5.Display.print(" / ");
+    M5.Display.print(appState.activeNoteCount());
   } else {
+    M5.Display.print("- / ");
+    M5.Display.print(appState.activeNoteCount());
+  }
+
+  M5.Display.fillRect(
+      VALUE_COLUMN_X,
+      ACTIVE_NOTES_ROW_Y,
+      VALUE_COLUMN_WIDTH,
+      VALUE_ROW_HEIGHT,
+      TFT_BLACK);
+  M5.Display.setCursor(VALUE_COLUMN_X, ACTIVE_NOTES_ROW_Y);
+  if (appState.activeNoteCount() == 0) {
     M5.Display.print("-");
+    return;
+  }
+
+  const size_t displayedNoteCount = std::min(appState.activeNoteCount(), DISPLAYED_ACTIVE_NOTE_LIMIT);
+  for (size_t index = 0; index < displayedNoteCount; ++index) {
+    if (index > 0) {
+      M5.Display.print(' ');
+    }
+
+    M5.Display.print(appState.activeNoteAt(index).note);
+  }
+
+  if (appState.activeNoteCount() > DISPLAYED_ACTIVE_NOTE_LIMIT) {
+    M5.Display.print("+");
   }
 }
 

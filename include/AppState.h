@@ -2,6 +2,8 @@
 
 #include <Arduino.h>
 
+#include "ActiveNotes.h"
+
 enum class BleConnectionState {
   Starting,
   Advertising,
@@ -43,6 +45,10 @@ public:
   // Return millis() timestamp of the most recent MIDI activity.
   uint32_t lastMidiActivityAtMs() const;
 
+  // Return currently held notes across all channels.
+  size_t activeNoteCount() const;
+  ActiveNote activeNoteAt(size_t index) const;
+
   // Tell the display layer whether the static layout must be redrawn.
   bool fullDisplayRefreshNeeded() const;
 
@@ -54,6 +60,9 @@ public:
 
   // Update BLE state and request a display redraw when the value changes.
   void setBleConnectionState(BleConnectionState state);
+
+  // Clear active notes because the sender disconnected before releasing them.
+  void clearActiveNotes();
 
   // Update uptime and request a display redraw when the value changes.
   void setUptimeSeconds(uint32_t uptimeSeconds);
@@ -79,6 +88,7 @@ private:
   uint8_t lastMidiNote_ = 0;
   uint8_t lastMidiVelocity_ = 0;
   uint32_t lastMidiActivityAtMs_ = 0;
+  ActiveNotes activeNotes_;
   bool fullDisplayRefreshNeeded_ = true;
   bool uptimeRefreshNeeded_ = true;
   bool midiActivityRefreshNeeded_ = true;

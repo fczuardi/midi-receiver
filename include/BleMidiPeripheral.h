@@ -1,6 +1,8 @@
 #pragma once
 
+#include <array>
 #include <atomic>
+#include <mutex>
 
 #include "AppState.h"
 
@@ -20,6 +22,14 @@ public:
   void update();
 
 private:
+  struct PendingNoteEvent {
+    MidiActivityKind kind = MidiActivityKind::None;
+    uint8_t channel = 0;
+    uint8_t note = 0;
+    uint8_t velocity = 0;
+    uint32_t activityAtMs = 0;
+  };
+
   static void handleConnected();
   static void handleDisconnected();
   static void handleActiveSensing();
@@ -31,15 +41,18 @@ private:
   void noteReceived(MidiActivityKind kind, uint8_t channel, uint8_t note, uint8_t velocity);
   void activeSensingReceived();
   void applyPendingMidiActivity();
+  bool enqueuePendingNoteEvent(const PendingNoteEvent& event);
 
   AppState& appState_;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
   std::atomic<uint32_t> pendingActiveSensingCount_{0};
-  std::atomic<uint32_t> pendingNoteEventCount_{0};
-  std::atomic<uint8_t> pendingNoteEventKind_{static_cast<uint8_t>(MidiActivityKind::None)};
-  std::atomic<uint8_t> pendingNoteChannel_{0};
-  std::atomic<uint8_t> pendingNoteNumber_{0};
-  std::atomic<uint8_t> pendingNoteVelocity_{0};
   std::atomic<uint32_t> pendingMidiActivityAtMs_{0};
+  std::atomic<uint32_t> droppedPendingNoteEventCount_{0};
+
+  static constexpr size_t MAX_PENDING_NOTE_EVENTS = 32;
+
+  std::mutex pendingNoteEventMutex_;
+  std::array<PendingNoteEvent, MAX_PENDING_NOTE_EVENTS> pendingNoteEvents_{};
+  size_t pendingNoteEventCount_ = 0;
 };
