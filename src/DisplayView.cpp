@@ -1,8 +1,11 @@
 #include "DisplayView.h"
 
+#include "MidiNoteName.h"
+
 #include <M5Unified.h>
 
 #include <algorithm>
+#include <array>
 
 namespace {
 constexpr int32_t TITLE_ROW_Y = 0;
@@ -16,10 +19,10 @@ constexpr int32_t ACTIVE_NOTES_ROW_Y = 123;
 
 constexpr int32_t LABEL_COLUMN_X = 0;
 constexpr int32_t VALUE_COLUMN_X = 96;
-constexpr int32_t VALUE_COLUMN_WIDTH = 120;
+constexpr int32_t VALUE_COLUMN_WIDTH = 140;
 constexpr int32_t VALUE_ROW_HEIGHT = 12;
 
-constexpr size_t DISPLAYED_ACTIVE_NOTE_LIMIT = 8;
+constexpr size_t DISPLAYED_ACTIVE_NOTE_LIMIT = 5;
 }
 
 void DisplayView::begin() {
@@ -123,7 +126,8 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
   M5.Display.setCursor(VALUE_COLUMN_X, MIDI_NOTE_ROW_Y);
   if (appState.lastMidiActivityKind() == MidiActivityKind::NoteOn ||
       appState.lastMidiActivityKind() == MidiActivityKind::NoteOff) {
-    M5.Display.print(appState.lastMidiNote());
+    const MidiNoteName noteName = midiNoteName(appState.lastMidiNote());
+    M5.Display.print(noteName.data());
     M5.Display.print(" ch ");
     M5.Display.print(appState.lastMidiChannel());
   } else {
@@ -159,17 +163,31 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
     return;
   }
 
-  const size_t displayedNoteCount = std::min(appState.activeNoteCount(), DISPLAYED_ACTIVE_NOTE_LIMIT);
+  const size_t displayedNoteCount =
+      std::min(appState.activeNoteCount(), DISPLAYED_ACTIVE_NOTE_LIMIT);
+  std::array<ActiveNote, ActiveNotes::MAX_ACTIVE_NOTES> sortedNotes{};
+  for (size_t index = 0; index < appState.activeNoteCount(); ++index) {
+    sortedNotes[index] = appState.activeNoteAt(index);
+  }
+
+  std::sort(
+      sortedNotes.begin(),
+      sortedNotes.begin() + appState.activeNoteCount(),
+      [](const ActiveNote& left, const ActiveNote& right) {
+        return left.note < right.note;
+      });
+
   for (size_t index = 0; index < displayedNoteCount; ++index) {
     if (index > 0) {
       M5.Display.print(' ');
     }
 
-    M5.Display.print(appState.activeNoteAt(index).note);
+    const MidiNoteName noteName = midiNoteName(sortedNotes[index].note);
+    M5.Display.print(noteName.data());
   }
 
   if (appState.activeNoteCount() > DISPLAYED_ACTIVE_NOTE_LIMIT) {
-    M5.Display.print("+");
+    M5.Display.print(" +");
   }
 }
 
