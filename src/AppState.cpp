@@ -36,6 +36,38 @@ uint8_t AppState::lastMidiVelocity() const {
   return lastMidiVelocity_;
 }
 
+uint8_t AppState::lastControlChangeChannel() const {
+  return lastControlChangeChannel_;
+}
+
+uint8_t AppState::lastControlChangeNumber() const {
+  return lastControlChangeNumber_;
+}
+
+uint8_t AppState::lastControlChangeValue() const {
+  return lastControlChangeValue_;
+}
+
+bool AppState::hasControlChange() const {
+  return hasControlChange_;
+}
+
+bool AppState::sustainEnabled() const {
+  return sustainEnabled_;
+}
+
+uint8_t AppState::lastPitchBendChannel() const {
+  return lastPitchBendChannel_;
+}
+
+int AppState::lastPitchBendValue() const {
+  return lastPitchBendValue_;
+}
+
+bool AppState::hasPitchBend() const {
+  return hasPitchBend_;
+}
+
 uint32_t AppState::lastMidiActivityAtMs() const {
   return lastMidiActivityAtMs_;
 }
@@ -117,6 +149,39 @@ void AppState::recordMidiActivity(
     activeNotes_.noteOff(channel, note);
   }
 
+  midiActivityRefreshNeeded_ = true;
+}
+
+void AppState::recordControlChange(
+    uint8_t channel,
+    uint8_t controllerNumber,
+    uint8_t controllerValue,
+    uint32_t activityAtMs) {
+  constexpr uint8_t SUSTAIN_CONTROLLER_NUMBER = 64;
+  constexpr uint8_t SWITCH_ON_THRESHOLD = 64;
+
+  receivedMidiMessageCount_ += 1;
+  lastMidiActivityKind_ = MidiActivityKind::ControlChange;
+  lastControlChangeChannel_ = channel;
+  lastControlChangeNumber_ = controllerNumber;
+  lastControlChangeValue_ = controllerValue;
+  hasControlChange_ = true;
+  lastMidiActivityAtMs_ = activityAtMs;
+
+  if (controllerNumber == SUSTAIN_CONTROLLER_NUMBER) {
+    sustainEnabled_ = controllerValue >= SWITCH_ON_THRESHOLD;
+  }
+
+  midiActivityRefreshNeeded_ = true;
+}
+
+void AppState::recordPitchBend(uint8_t channel, int bendValue, uint32_t activityAtMs) {
+  receivedMidiMessageCount_ += 1;
+  lastMidiActivityKind_ = MidiActivityKind::PitchBend;
+  lastPitchBendChannel_ = channel;
+  lastPitchBendValue_ = bendValue;
+  hasPitchBend_ = true;
+  lastMidiActivityAtMs_ = activityAtMs;
   midiActivityRefreshNeeded_ = true;
 }
 

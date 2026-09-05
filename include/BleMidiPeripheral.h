@@ -22,11 +22,12 @@ public:
   void update();
 
 private:
-  struct PendingNoteEvent {
+  struct PendingMidiEvent {
     MidiActivityKind kind = MidiActivityKind::None;
     uint8_t channel = 0;
-    uint8_t note = 0;
-    uint8_t velocity = 0;
+    uint8_t data1 = 0;
+    uint8_t data2 = 0;
+    int bendValue = 0;
     uint32_t activityAtMs = 0;
   };
 
@@ -35,14 +36,24 @@ private:
   static void handleActiveSensing();
   static void handleNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
   static void handleNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
+  static void handleControlChange(
+      uint8_t channel,
+      uint8_t controllerNumber,
+      uint8_t controllerValue);
+  static void handlePitchBend(uint8_t channel, int bendValue);
 
   static BleMidiPeripheral* activeInstance_;
 
   void noteReceived(MidiActivityKind kind, uint8_t channel, uint8_t note, uint8_t velocity);
+  void controlChangeReceived(
+      uint8_t channel,
+      uint8_t controllerNumber,
+      uint8_t controllerValue);
+  void pitchBendReceived(uint8_t channel, int bendValue);
   void activeSensingReceived();
   void applyPendingMidiActivity();
   void discardPendingMidiActivity();
-  bool enqueuePendingNoteEvent(const PendingNoteEvent& event);
+  bool enqueuePendingMidiEvent(const PendingMidiEvent& event);
 
   AppState& appState_;
   bool connected_ = false;
@@ -50,11 +61,11 @@ private:
   std::atomic<bool> connectionEnded_{false};
   std::atomic<uint32_t> pendingActiveSensingCount_{0};
   std::atomic<uint32_t> pendingMidiActivityAtMs_{0};
-  std::atomic<uint32_t> droppedPendingNoteEventCount_{0};
+  std::atomic<uint32_t> droppedPendingMidiEventCount_{0};
 
-  static constexpr size_t MAX_PENDING_NOTE_EVENTS = 32;
+  static constexpr size_t MAX_PENDING_MIDI_EVENTS = 32;
 
-  std::mutex pendingNoteEventMutex_;
-  std::array<PendingNoteEvent, MAX_PENDING_NOTE_EVENTS> pendingNoteEvents_{};
-  size_t pendingNoteEventCount_ = 0;
+  std::mutex pendingMidiEventMutex_;
+  std::array<PendingMidiEvent, MAX_PENDING_MIDI_EVENTS> pendingMidiEvents_{};
+  size_t pendingMidiEventCount_ = 0;
 };

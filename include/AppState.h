@@ -16,6 +16,8 @@ enum class MidiActivityKind {
   ActiveSensing,
   NoteOn,
   NoteOff,
+  ControlChange,
+  PitchBend,
 };
 
 // AppState is the small shared model for the application.
@@ -46,6 +48,20 @@ public:
   uint8_t lastMidiChannel() const;
   uint8_t lastMidiNote() const;
   uint8_t lastMidiVelocity() const;
+
+  // Return parsed fields from the most recent Control Change message.
+  uint8_t lastControlChangeChannel() const;
+  uint8_t lastControlChangeNumber() const;
+  uint8_t lastControlChangeValue() const;
+  bool hasControlChange() const;
+
+  // Return the current sustain pedal/hold state observed from CC 64.
+  bool sustainEnabled() const;
+
+  // Return parsed fields from the most recent Pitch Bend message.
+  uint8_t lastPitchBendChannel() const;
+  int lastPitchBendValue() const;
+  bool hasPitchBend() const;
 
   // Return millis() timestamp of the most recent MIDI activity.
   uint32_t lastMidiActivityAtMs() const;
@@ -82,6 +98,17 @@ public:
       uint8_t velocity,
       uint32_t activityAtMs);
 
+  // Record a Control Change message without applying musical interpretation,
+  // except for exposing CC 64 as the observed sustain/hold state.
+  void recordControlChange(
+      uint8_t channel,
+      uint8_t controllerNumber,
+      uint8_t controllerValue,
+      uint32_t activityAtMs);
+
+  // Record a Pitch Bend message as a centered signed value from the MIDI parser.
+  void recordPitchBend(uint8_t channel, int bendValue, uint32_t activityAtMs);
+
   // Clear display refresh flags after the display has rendered the latest state.
   void markDisplayRefreshed();
 
@@ -95,6 +122,14 @@ private:
   uint8_t lastMidiChannel_ = 0;
   uint8_t lastMidiNote_ = 0;
   uint8_t lastMidiVelocity_ = 0;
+  uint8_t lastControlChangeChannel_ = 0;
+  uint8_t lastControlChangeNumber_ = 0;
+  uint8_t lastControlChangeValue_ = 0;
+  bool hasControlChange_ = false;
+  bool sustainEnabled_ = false;
+  uint8_t lastPitchBendChannel_ = 0;
+  int lastPitchBendValue_ = 0;
+  bool hasPitchBend_ = false;
   uint32_t lastMidiActivityAtMs_ = 0;
   ActiveNotes activeNotes_;
   bool fullDisplayRefreshNeeded_ = true;

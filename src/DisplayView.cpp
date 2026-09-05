@@ -73,7 +73,7 @@ void DisplayView::drawStaticLayout(const AppState& appState) {
   M5.Display.print("Note: ");
 
   M5.Display.setCursor(LABEL_COLUMN_X, MIDI_VELOCITY_ROW_Y);
-  M5.Display.print("Vel/Active: ");
+  M5.Display.print("Ctrl: ");
 
   M5.Display.setCursor(LABEL_COLUMN_X, ACTIVE_NOTES_ROW_Y);
   M5.Display.print("Held: ");
@@ -130,6 +130,8 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
     M5.Display.print(noteName.data());
     M5.Display.print(" ch ");
     M5.Display.print(appState.lastMidiChannel());
+    M5.Display.print(" v");
+    M5.Display.print(appState.lastMidiVelocity());
   } else {
     M5.Display.print("-");
   }
@@ -141,14 +143,21 @@ void DisplayView::drawMidiActivityValues(const AppState& appState) {
       VALUE_ROW_HEIGHT,
       TFT_BLACK);
   M5.Display.setCursor(VALUE_COLUMN_X, MIDI_VELOCITY_ROW_Y);
-  if (appState.lastMidiActivityKind() == MidiActivityKind::NoteOn ||
-      appState.lastMidiActivityKind() == MidiActivityKind::NoteOff) {
-    M5.Display.print(appState.lastMidiVelocity());
-    M5.Display.print(" / ");
-    M5.Display.print(appState.activeNoteCount());
+  M5.Display.print("S:");
+  M5.Display.print(appState.sustainEnabled() ? "on" : "off");
+  M5.Display.print(" C");
+  if (appState.hasControlChange()) {
+    M5.Display.print(appState.lastControlChangeNumber());
+    M5.Display.print("=");
+    M5.Display.print(appState.lastControlChangeValue());
   } else {
-    M5.Display.print("- / ");
-    M5.Display.print(appState.activeNoteCount());
+    M5.Display.print("-");
+  }
+  M5.Display.print(" P:");
+  if (appState.hasPitchBend()) {
+    M5.Display.print(appState.lastPitchBendValue());
+  } else {
+    M5.Display.print("-");
   }
 
   M5.Display.fillRect(
@@ -201,6 +210,10 @@ const char* DisplayView::midiActivityLabel(MidiActivityKind kind) const {
       return "note on";
     case MidiActivityKind::NoteOff:
       return "note off";
+    case MidiActivityKind::ControlChange:
+      return "control";
+    case MidiActivityKind::PitchBend:
+      return "pitch";
   }
 
   return "unknown";
