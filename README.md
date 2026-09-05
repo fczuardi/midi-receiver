@@ -1,28 +1,38 @@
 # M5StickC Plus2 BLE MIDI receiver experiment
 
-This repository contains a small experiment to determine whether an
-M5StickC Plus2 can reliably receive MIDI messages over Bluetooth Low
-Energy.
+This repository documents a completed experiment to determine whether an
+M5StickC Plus2 can reliably receive and interpret MIDI messages over Bluetooth
+Low Energy.
 
 The experiment uses PlatformIO with the Arduino framework.
 
-## Current milestone
+## Status
 
-Create firmware that:
+The initial receiver milestone was completed on September 5, 2026 and validated
+on M5StickC Plus2 hardware.
+
+The firmware:
 
 - advertises the M5StickC Plus2 as a BLE MIDI device;
 - accepts an incoming BLE MIDI connection;
-- displays the connection status on its screen;
-- receives and displays:
+- displays connection status and received activity;
+- receives and interprets:
   - Note On;
   - Note Off;
   - MIDI channel;
-  - note number;
+  - note number and musical note name;
   - velocity;
-- keeps a count of currently active notes;
-- clears active notes after disconnection.
+  - Control Change messages;
+  - sustain state observed through CC 64;
+  - Pitch Bend;
+- tracks simultaneous active notes across MIDI channels;
+- preserves bursts of events with a bounded queue;
+- clears pending events and active notes after disconnection.
 
-No audio synthesis is required.
+No audio synthesis is included.
+
+Development history and hardware observations are recorded in
+[docs/devlog](docs/devlog).
 
 ## Hardware
 
@@ -34,16 +44,20 @@ The BLE MIDI source may be a phone, tablet, or computer. A conventional
 USB MIDI controller may also be connected to a phone or tablet through
 USB OTG and routed to the M5StickC Plus2 over BLE MIDI.
 
-## Success criteria
+## Completed success criteria
 
-The milestone is complete when the device can:
+The milestone was validated with the following criteria:
 
-1. connect and reconnect without rebooting;
-2. receive Note On and Note Off events;
-3. receive a chord with at least eight simultaneous notes;
-4. display the received events without noticeable input delay;
-5. avoid leaving notes active after a disconnection;
-6. run continuously for at least ten minutes without crashing.
+- [x] connect and reconnect without rebooting;
+- [x] receive Note On and Note Off events;
+- [x] receive a chord with at least eight simultaneous notes;
+- [x] display received events without noticeable input delay;
+- [x] avoid leaving notes active after a disconnection;
+- [x] run continuously for at least ten minutes without crashing.
+
+Native tests cover pure MIDI state logic, and CI runs those tests before
+building the firmware. Hardware-dependent BLE and display behavior remains
+manually validated.
 
 ## Non-goals
 
@@ -56,6 +70,9 @@ This experiment does not include:
 - direct USB MIDI input;
 - MIDI over TRS or DIN;
 - product design or custom hardware.
+
+Future experiments may reuse lessons or code from this repository, but this
+milestone does not define a stable library API for downstream projects.
 
 ## Prior art
 
@@ -80,5 +97,12 @@ reproducible.
 
 Prefer M5Unified for access to the display and buttons.
 
-The firmware should produce useful serial logs for connection,
-disconnection, and received MIDI events.
+The firmware produces serial logs for connection, disconnection, received MIDI
+events, and bounded-queue overflow diagnostics.
+
+Build and test locally with:
+
+```bash
+env PLATFORMIO_CORE_DIR=.platformio-home pio test -e native
+env PLATFORMIO_CORE_DIR=.platformio-home pio run
+```
