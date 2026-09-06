@@ -42,6 +42,10 @@ public:
 //
 // This class owns BLE-MIDI callbacks, pending event buffering, and MIDI note
 // normalization. It does not know about display state, AppState, or audio.
+//
+// Only one BleMidiInput instance may be active. The underlying BLE-MIDI library
+// is configured through global objects, so callbacks are routed through a single
+// active instance pointer.
 class BleMidiInput {
 public:
   // Initialize the BLE stack, create the MIDI GATT service, and advertise it.

@@ -36,6 +36,10 @@ The firmware:
 `BleMidiPeripheral` keeps the receiver-specific display and serial diagnostics
 on top of that input layer.
 
+The root `library.json` packages `BleMidiInput` as
+`EmbeddedMusicBleMidiInput`, so another PlatformIO firmware can consume the BLE
+MIDI transport without importing this receiver's display application.
+
 No audio synthesis is included.
 
 Development history and hardware observations are recorded in
@@ -114,4 +118,5 @@ Build and test locally with:
 ```bash
 env PLATFORMIO_CORE_DIR=.platformio-home pio test -e native
 env PLATFORMIO_CORE_DIR=.platformio-home pio run
+env PLATFORMIO_CORE_DIR=.platformio-home pio pkg pack . --output /tmp
 ```

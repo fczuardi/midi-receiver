@@ -7,6 +7,9 @@
 #include "MidiNoteEventFactory.h"
 
 namespace {
+// The BLE-MIDI library creates the advertised device through a static macro.
+// This first reusable package keeps the receiver milestone name; making it
+// configurable should be a separate slice after the package is consumed once.
 constexpr const char* BLE_DEVICE_NAME = "M5 BLE MIDI RX";
 }
 

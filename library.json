@@ -1,0 +1,43 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "EmbeddedMusicBleMidiInput",
+  "version": "0.1.0",
+  "description": "BLE MIDI input transport for embedded music experiments",
+  "keywords": ["ble", "midi", "embedded", "music"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fczuardi/midi-receiver.git"
+  },
+  "frameworks": "arduino",
+  "platforms": "espressif32",
+  "headers": ["BleMidiInput.h", "MidiNoteEventFactory.h"],
+  "dependencies": [
+    {
+      "name": "EmbeddedMusicFirmwareContracts",
+      "version": "https://github.com/fczuardi/embedded-music-experiments.git#2577b866e6588044853faa8eb3dedab2c1f3952a"
+    },
+    {
+      "owner": "lathoub",
+      "name": "BLE-MIDI",
+      "version": "2.2"
+    }
+  ],
+  "build": {
+    "srcFilter": [
+      "-<*>",
+      "+<BleMidiInput.cpp>",
+      "+<MidiNoteEventFactory.cpp>"
+    ]
+  },
+  "export": {
+    "include": [
+      "include/BleMidiInput.h",
+      "include/MidiNoteEventFactory.h",
+      "src/BleMidiInput.cpp",
+      "src/MidiNoteEventFactory.cpp",
+      "docs/devlog/016-package-ble-midi-input.md",
+      "README.md",
+      "library.json"
+    ]
+  }
+}

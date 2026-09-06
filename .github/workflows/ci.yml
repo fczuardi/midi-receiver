@@ -40,6 +40,47 @@ jobs:
       - name: Build firmware
         run: pio run
 
+      - name: Validate PlatformIO library package
+        run: pio pkg pack . --output /tmp
+
+      - name: Build temporary package consumer
+        run: |
+          mkdir -p /tmp/ble-midi-input-consumer/src
+          cat > /tmp/ble-midi-input-consumer/platformio.ini <<'EOF'
+          [env:esp32dev]
+          platform = platformio/espressif32@7.0.1
+          board = esp32dev
+          framework = arduino
+          lib_deps =
+            file://${{ github.workspace }}
+          lib_ignore =
+            ArduinoBLE
+            Arduino_SpiNINA
+            NimBLE-Arduino
+          EOF
+          cat > /tmp/ble-midi-input-consumer/src/main.cpp <<'EOF'
+          #include <Arduino.h>
+          #include "BleMidiInput.h"
+
+          class CapturingInstrumentEventSink : public InstrumentEventSink {
+          public:
+            void onNoteEvent(const NoteEvent&) override {}
+            void onDisconnected() override {}
+          };
+
+          CapturingInstrumentEventSink sink;
+          BleMidiInput input;
+
+          void setup() {
+            input.setInstrumentEventSink(&sink);
+          }
+
+          void loop() {
+            input.update();
+          }
+          EOF
+          pio run -d /tmp/ble-midi-input-consumer
+
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
