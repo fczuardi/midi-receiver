@@ -236,11 +236,20 @@ void BleMidiInput::applyPendingMidiActivity() {
             event.activityAtMs);
       }
     } else if (event.kind == PendingMidiEventKind::PitchBend) {
+      const PitchBendEvent pitchBendEvent = {
+          event.channel,
+          static_cast<int16_t>(event.bendValue),
+      };
+
       if (diagnosticSink_ != nullptr) {
         diagnosticSink_->onBleMidiPitchBend(
             event.channel,
             event.bendValue,
             event.activityAtMs);
+      }
+
+      if (instrumentEventSink_ != nullptr) {
+        instrumentEventSink_->onPitchBendEvent(pitchBendEvent);
       }
     } else if (
         event.kind == PendingMidiEventKind::NoteOn ||

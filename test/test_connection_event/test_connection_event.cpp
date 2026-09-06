@@ -7,6 +7,9 @@ public:
   void onNoteEvent(const NoteEvent&) override {
   }
 
+  void onPitchBendEvent(const PitchBendEvent&) override {
+  }
+
   void onDisconnected() override {
     disconnected = true;
   }

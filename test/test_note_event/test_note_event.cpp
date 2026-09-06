@@ -37,13 +37,20 @@ public:
     lastEvent = event;
   }
 
+  void onPitchBendEvent(const PitchBendEvent& event) override {
+    receivedPitchBend = true;
+    lastPitchBendEvent = event;
+  }
+
   void onDisconnected() override {
     disconnected = true;
   }
 
   bool received = false;
+  bool receivedPitchBend = false;
   bool disconnected = false;
   NoteEvent lastEvent = {NoteEventType::NoteOff, 0, 0, 0};
+  PitchBendEvent lastPitchBendEvent = {0, 0};
 };
 
 void test_shared_instrument_event_sink_receives_note_event() {
@@ -57,6 +64,17 @@ void test_shared_instrument_event_sink_receives_note_event() {
   TEST_ASSERT_EQUAL_UINT8(4, sink.lastEvent.channel);
   TEST_ASSERT_EQUAL_UINT8(72, sink.lastEvent.note);
   TEST_ASSERT_EQUAL_UINT8(100, sink.lastEvent.velocity);
+}
+
+void test_shared_instrument_event_sink_receives_pitch_bend_event() {
+  CapturingInstrumentEventSink sink;
+  const PitchBendEvent event = {5, -1234};
+
+  sink.onPitchBendEvent(event);
+
+  TEST_ASSERT_TRUE(sink.receivedPitchBend);
+  TEST_ASSERT_EQUAL_UINT8(5, sink.lastPitchBendEvent.channel);
+  TEST_ASSERT_EQUAL_INT16(-1234, sink.lastPitchBendEvent.value);
 }
 
 void test_shared_instrument_event_sink_receives_disconnection() {
@@ -73,6 +91,7 @@ int main() {
   RUN_TEST(test_note_off_event_preserves_parsed_fields);
   RUN_TEST(test_note_on_with_velocity_zero_becomes_note_off);
   RUN_TEST(test_shared_instrument_event_sink_receives_note_event);
+  RUN_TEST(test_shared_instrument_event_sink_receives_pitch_bend_event);
   RUN_TEST(test_shared_instrument_event_sink_receives_disconnection);
   return UNITY_END();
 }
