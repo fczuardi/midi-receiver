@@ -15,7 +15,7 @@ C++ unit that can be tested without BLE or display code.
 Important behavior to cover:
 
 - dispatch several pending note events in the original receive order;
-- deliver already-normalized events to `NoteEventSink`;
+- deliver already-normalized events to `InstrumentEventSink`;
 - discard pending note events before notifying disconnection;
 - avoid delivering any note event after disconnection;
 - keep Control Change and Pitch Bend outside the note-event boundary.

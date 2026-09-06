@@ -28,8 +28,8 @@ The firmware:
   - Pitch Bend;
 - tracks simultaneous active notes across MIDI channels;
 - preserves bursts of events with a bounded queue;
-- can deliver typed note events to an optional `NoteEventSink`;
-- can notify disconnection through an optional `ConnectionEventSink`;
+- can deliver typed note events and disconnection to an optional
+  `InstrumentEventSink`;
 - clears pending events and active notes after disconnection.
 
 No audio synthesis is included.
@@ -75,7 +75,9 @@ This experiment does not include:
 - product design or custom hardware.
 
 Future experiments may reuse lessons or code from this repository, but this
-milestone does not define a stable library API for downstream projects.
+milestone does not define a complete stable library API for downstream projects.
+The current integration contract is the shared `EmbeddedMusicFirmwareContracts`
+PlatformIO package.
 
 ## Prior art
 

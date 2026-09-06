@@ -1,4 +1,4 @@
-#include "NoteEvent.h"
+#include "MidiNoteEventFactory.h"
 
 NoteEvent makeNoteEvent(
     NoteEventType type,
@@ -10,12 +10,4 @@ NoteEvent makeNoteEvent(
   }
 
   return {type, channel, note, velocity};
-}
-
-void notifyNoteEventSink(NoteEventSink* sink, const NoteEvent& event) {
-  if (sink == nullptr) {
-    return;
-  }
-
-  sink->onNoteEvent(event);
 }

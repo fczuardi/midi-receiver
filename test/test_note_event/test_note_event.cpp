@@ -1,17 +1,7 @@
 #include <unity.h>
 
-#include "NoteEvent.h"
-
-class CapturingNoteEventSink : public NoteEventSink {
-public:
-  void onNoteEvent(const NoteEvent& event) override {
-    received = true;
-    lastEvent = event;
-  }
-
-  bool received = false;
-  NoteEvent lastEvent = {NoteEventType::NoteOff, 0, 0, 0};
-};
+#include "InstrumentEventSink.h"
+#include "MidiNoteEventFactory.h"
 
 void test_note_on_event_preserves_parsed_fields() {
   const NoteEvent event = makeNoteEvent(NoteEventType::NoteOn, 1, 60, 96);
@@ -40,11 +30,27 @@ void test_note_on_with_velocity_zero_becomes_note_off() {
   TEST_ASSERT_EQUAL_UINT8(0, event.velocity);
 }
 
-void test_notify_note_event_sink_delivers_event() {
-  CapturingNoteEventSink sink;
+class CapturingInstrumentEventSink : public InstrumentEventSink {
+public:
+  void onNoteEvent(const NoteEvent& event) override {
+    received = true;
+    lastEvent = event;
+  }
+
+  void onDisconnected() override {
+    disconnected = true;
+  }
+
+  bool received = false;
+  bool disconnected = false;
+  NoteEvent lastEvent = {NoteEventType::NoteOff, 0, 0, 0};
+};
+
+void test_shared_instrument_event_sink_receives_note_event() {
+  CapturingInstrumentEventSink sink;
   const NoteEvent event = makeNoteEvent(NoteEventType::NoteOn, 4, 72, 100);
 
-  notifyNoteEventSink(&sink, event);
+  sink.onNoteEvent(event);
 
   TEST_ASSERT_TRUE(sink.received);
   TEST_ASSERT_EQUAL(NoteEventType::NoteOn, sink.lastEvent.type);
@@ -53,12 +59,12 @@ void test_notify_note_event_sink_delivers_event() {
   TEST_ASSERT_EQUAL_UINT8(100, sink.lastEvent.velocity);
 }
 
-void test_notify_note_event_sink_allows_null_sink() {
-  const NoteEvent event = makeNoteEvent(NoteEventType::NoteOn, 4, 72, 100);
+void test_shared_instrument_event_sink_receives_disconnection() {
+  CapturingInstrumentEventSink sink;
 
-  notifyNoteEventSink(nullptr, event);
+  sink.onDisconnected();
 
-  TEST_PASS();
+  TEST_ASSERT_TRUE(sink.disconnected);
 }
 
 int main() {
@@ -66,7 +72,7 @@ int main() {
   RUN_TEST(test_note_on_event_preserves_parsed_fields);
   RUN_TEST(test_note_off_event_preserves_parsed_fields);
   RUN_TEST(test_note_on_with_velocity_zero_becomes_note_off);
-  RUN_TEST(test_notify_note_event_sink_delivers_event);
-  RUN_TEST(test_notify_note_event_sink_allows_null_sink);
+  RUN_TEST(test_shared_instrument_event_sink_receives_note_event);
+  RUN_TEST(test_shared_instrument_event_sink_receives_disconnection);
   return UNITY_END();
 }

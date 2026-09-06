@@ -1,9 +1,12 @@
 #include <unity.h>
 
-#include "ConnectionEvent.h"
+#include "InstrumentEventSink.h"
 
-class CapturingConnectionEventSink : public ConnectionEventSink {
+class CapturingInstrumentEventSink : public InstrumentEventSink {
 public:
+  void onNoteEvent(const NoteEvent&) override {
+  }
+
   void onDisconnected() override {
     disconnected = true;
   }
@@ -11,23 +14,16 @@ public:
   bool disconnected = false;
 };
 
-void test_notify_disconnected_delivers_event() {
-  CapturingConnectionEventSink sink;
+void test_shared_instrument_event_sink_receives_disconnection() {
+  CapturingInstrumentEventSink sink;
 
-  notifyDisconnected(&sink);
+  sink.onDisconnected();
 
   TEST_ASSERT_TRUE(sink.disconnected);
 }
 
-void test_notify_disconnected_allows_null_sink() {
-  notifyDisconnected(nullptr);
-
-  TEST_PASS();
-}
-
 int main() {
   UNITY_BEGIN();
-  RUN_TEST(test_notify_disconnected_delivers_event);
-  RUN_TEST(test_notify_disconnected_allows_null_sink);
+  RUN_TEST(test_shared_instrument_event_sink_receives_disconnection);
   return UNITY_END();
 }

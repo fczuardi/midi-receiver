@@ -5,8 +5,7 @@
 #include <mutex>
 
 #include "AppState.h"
-#include "ConnectionEvent.h"
-#include "NoteEvent.h"
+#include "InstrumentEventSink.h"
 
 // Owns BLE setup for this firmware.
 //
@@ -23,13 +22,9 @@ public:
   // Keeping state changes here makes the main loop easier to inspect.
   void update();
 
-  // Register an optional typed note-event consumer.
+  // Register an optional instrument-event consumer.
   // The sink is not owned by BleMidiPeripheral and must outlive it.
-  void setNoteEventSink(NoteEventSink* sink);
-
-  // Register an optional connection lifecycle consumer.
-  // The sink is not owned by BleMidiPeripheral and must outlive it.
-  void setConnectionEventSink(ConnectionEventSink* sink);
+  void setInstrumentEventSink(InstrumentEventSink* sink);
 
 private:
   struct PendingMidiEvent {
@@ -66,8 +61,7 @@ private:
   bool enqueuePendingMidiEvent(const PendingMidiEvent& event);
 
   AppState& appState_;
-  NoteEventSink* noteEventSink_ = nullptr;
-  ConnectionEventSink* connectionEventSink_ = nullptr;
+  InstrumentEventSink* instrumentEventSink_ = nullptr;
   bool connected_ = false;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};

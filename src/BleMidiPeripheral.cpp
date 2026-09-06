@@ -3,7 +3,7 @@
 #include <BLEMIDI_Transport.h>
 #include <hardware/BLEMIDI_ESP32.h>
 
-#include "NoteEvent.h"
+#include "MidiNoteEventFactory.h"
 
 namespace {
 constexpr const char* BLE_DEVICE_NAME = "M5 BLE MIDI RX";
@@ -48,7 +48,9 @@ void BleMidiPeripheral::update() {
     discardPendingMidiActivity();
     appState_.setBleConnectionState(BleConnectionState::Advertising);
     appState_.clearActiveNotes();
-    notifyDisconnected(connectionEventSink_);
+    if (instrumentEventSink_ != nullptr) {
+      instrumentEventSink_->onDisconnected();
+    }
   }
 
   if (connectionStarted_.exchange(false)) {
@@ -67,12 +69,8 @@ void BleMidiPeripheral::update() {
   applyPendingMidiActivity();
 }
 
-void BleMidiPeripheral::setNoteEventSink(NoteEventSink* sink) {
-  noteEventSink_ = sink;
-}
-
-void BleMidiPeripheral::setConnectionEventSink(ConnectionEventSink* sink) {
-  connectionEventSink_ = sink;
+void BleMidiPeripheral::setInstrumentEventSink(InstrumentEventSink* sink) {
+  instrumentEventSink_ = sink;
 }
 
 void BleMidiPeripheral::handleConnected() {
@@ -253,7 +251,9 @@ void BleMidiPeripheral::applyPendingMidiActivity() {
           event.data1,
           event.data2);
       appState_.recordNoteEvent(noteEvent, event.activityAtMs);
-      notifyNoteEventSink(noteEventSink_, noteEvent);
+      if (instrumentEventSink_ != nullptr) {
+        instrumentEventSink_->onNoteEvent(noteEvent);
+      }
 
       Serial.print("MIDI RX: note_event type=");
       Serial.print(noteEvent.type == NoteEventType::NoteOn ? "note_on" : "note_off");

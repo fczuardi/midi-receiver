@@ -1,6 +1,7 @@
 #include <unity.h>
 
 #include "AppState.h"
+#include "MidiNoteEventFactory.h"
 
 void test_note_on_with_velocity_zero_is_treated_as_note_off() {
   AppState appState;
