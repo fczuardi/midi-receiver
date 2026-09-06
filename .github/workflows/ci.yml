@@ -53,6 +53,7 @@ jobs:
           framework = arduino
           lib_deps =
             file://${{ github.workspace }}
+            EmbeddedMusicFirmwareContracts=https://github.com/fczuardi/embedded-music-experiments.git#154035d94df99ab05c3eeb7eb144bf2012972ada
           lib_ignore =
             ArduinoBLE
             Arduino_SpiNINA
@@ -61,10 +62,12 @@ jobs:
           cat > /tmp/ble-midi-input-consumer/src/main.cpp <<'EOF'
           #include <Arduino.h>
           #include "BleMidiInput.h"
+          #include "PitchBendEvent.h"
 
           class CapturingInstrumentEventSink : public InstrumentEventSink {
           public:
             void onNoteEvent(const NoteEvent&) override {}
+            void onPitchBendEvent(const PitchBendEvent&) override {}
             void onDisconnected() override {}
           };
 
