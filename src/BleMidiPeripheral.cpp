@@ -48,6 +48,7 @@ void BleMidiPeripheral::update() {
     discardPendingMidiActivity();
     appState_.setBleConnectionState(BleConnectionState::Advertising);
     appState_.clearActiveNotes();
+    notifyDisconnected(connectionEventSink_);
   }
 
   if (connectionStarted_.exchange(false)) {
@@ -64,6 +65,14 @@ void BleMidiPeripheral::update() {
   // by the BLE-MIDI transport and call our note/real-time handlers.
   MIDI.read();
   applyPendingMidiActivity();
+}
+
+void BleMidiPeripheral::setNoteEventSink(NoteEventSink* sink) {
+  noteEventSink_ = sink;
+}
+
+void BleMidiPeripheral::setConnectionEventSink(ConnectionEventSink* sink) {
+  connectionEventSink_ = sink;
 }
 
 void BleMidiPeripheral::handleConnected() {
@@ -244,6 +253,7 @@ void BleMidiPeripheral::applyPendingMidiActivity() {
           event.data1,
           event.data2);
       appState_.recordNoteEvent(noteEvent, event.activityAtMs);
+      notifyNoteEventSink(noteEventSink_, noteEvent);
 
       Serial.print("MIDI RX: note_event type=");
       Serial.print(noteEvent.type == NoteEventType::NoteOn ? "note_on" : "note_off");

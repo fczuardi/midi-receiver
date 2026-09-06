@@ -24,6 +24,13 @@ struct NoteEvent {
   uint8_t velocity;
 };
 
+class NoteEventSink {
+public:
+  virtual ~NoteEventSink() = default;
+
+  virtual void onNoteEvent(const NoteEvent& event) = 0;
+};
+
 // Build a NoteEvent from parsed MIDI note fields.
 // MIDI convention treats Note On with velocity 0 as Note Off.
 NoteEvent makeNoteEvent(
@@ -31,3 +38,6 @@ NoteEvent makeNoteEvent(
     uint8_t channel,
     uint8_t note,
     uint8_t velocity);
+
+// Deliver an event to an optional sink.
+void notifyNoteEventSink(NoteEventSink* sink, const NoteEvent& event);

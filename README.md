@@ -28,6 +28,8 @@ The firmware:
   - Pitch Bend;
 - tracks simultaneous active notes across MIDI channels;
 - preserves bursts of events with a bounded queue;
+- can deliver typed note events to an optional `NoteEventSink`;
+- can notify disconnection through an optional `ConnectionEventSink`;
 - clears pending events and active notes after disconnection.
 
 No audio synthesis is included.
