@@ -32,6 +32,10 @@ The firmware:
   `InstrumentEventSink`;
 - clears pending events and active notes after disconnection.
 
+`BleMidiInput` owns BLE-MIDI transport and shared event production.
+`BleMidiPeripheral` keeps the receiver-specific display and serial diagnostics
+on top of that input layer.
+
 No audio synthesis is included.
 
 Development history and hardware observations are recorded in

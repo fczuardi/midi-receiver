@@ -1,17 +1,13 @@
 #pragma once
 
-#include <array>
-#include <atomic>
-#include <mutex>
-
 #include "AppState.h"
-#include "InstrumentEventSink.h"
+#include "BleMidiInput.h"
 
-// Owns BLE setup for this firmware.
+// Firmware-facing BLE MIDI receiver with display and serial diagnostics.
 //
-// This class wraps the Arduino BLE-MIDI library so the rest of the app does not
-// depend directly on its global MIDI objects and callback API.
-class BleMidiPeripheral {
+// BleMidiInput owns transport and event production. This class observes that
+// input and keeps the receiver-specific AppState/logging behavior.
+class BleMidiPeripheral : public BleMidiInputDiagnosticSink {
 public:
   explicit BleMidiPeripheral(AppState& appState);
 
@@ -27,51 +23,26 @@ public:
   void setInstrumentEventSink(InstrumentEventSink* sink);
 
 private:
-  struct PendingMidiEvent {
-    MidiActivityKind kind = MidiActivityKind::None;
-    uint8_t channel = 0;
-    uint8_t data1 = 0;
-    uint8_t data2 = 0;
-    int bendValue = 0;
-    uint32_t activityAtMs = 0;
-  };
-
-  static void handleConnected();
-  static void handleDisconnected();
-  static void handleActiveSensing();
-  static void handleNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
-  static void handleNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
-  static void handleControlChange(
+  void onBleMidiAdvertising(const char* deviceName) override;
+  void onBleMidiConnected() override;
+  void onBleMidiDisconnected() override;
+  void onBleMidiActiveSensing(
+      uint32_t count,
+      uint32_t activityAtMs) override;
+  void onBleMidiNoteEvent(
+      const NoteEvent& event,
+      uint32_t activityAtMs) override;
+  void onBleMidiControlChange(
       uint8_t channel,
       uint8_t controllerNumber,
-      uint8_t controllerValue);
-  static void handlePitchBend(uint8_t channel, int bendValue);
-
-  static BleMidiPeripheral* activeInstance_;
-
-  void noteReceived(MidiActivityKind kind, uint8_t channel, uint8_t note, uint8_t velocity);
-  void controlChangeReceived(
+      uint8_t controllerValue,
+      uint32_t activityAtMs) override;
+  void onBleMidiPitchBend(
       uint8_t channel,
-      uint8_t controllerNumber,
-      uint8_t controllerValue);
-  void pitchBendReceived(uint8_t channel, int bendValue);
-  void activeSensingReceived();
-  void applyPendingMidiActivity();
-  void discardPendingMidiActivity();
-  bool enqueuePendingMidiEvent(const PendingMidiEvent& event);
+      int bendValue,
+      uint32_t activityAtMs) override;
+  void onBleMidiDroppedEvents(uint32_t droppedEventCount) override;
 
   AppState& appState_;
-  InstrumentEventSink* instrumentEventSink_ = nullptr;
-  bool connected_ = false;
-  std::atomic<bool> connectionStarted_{false};
-  std::atomic<bool> connectionEnded_{false};
-  std::atomic<uint32_t> pendingActiveSensingCount_{0};
-  std::atomic<uint32_t> pendingMidiActivityAtMs_{0};
-  std::atomic<uint32_t> droppedPendingMidiEventCount_{0};
-
-  static constexpr size_t MAX_PENDING_MIDI_EVENTS = 32;
-
-  std::mutex pendingMidiEventMutex_;
-  std::array<PendingMidiEvent, MAX_PENDING_MIDI_EVENTS> pendingMidiEvents_{};
-  size_t pendingMidiEventCount_ = 0;
+  BleMidiInput input_;
 };
