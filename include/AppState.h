@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "ActiveNotes.h"
+#include "NoteEvent.h"
 
 enum class BleConnectionState {
   Starting,
@@ -97,6 +98,9 @@ public:
       uint8_t note,
       uint8_t velocity,
       uint32_t activityAtMs);
+
+  // Record a typed NoteEvent produced by the MIDI input boundary.
+  void recordNoteEvent(const NoteEvent& event, uint32_t activityAtMs);
 
   // Record a Control Change message without applying musical interpretation,
   // except for exposing CC 64 as the observed sustain/hold state.

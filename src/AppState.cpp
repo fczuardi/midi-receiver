@@ -152,6 +152,18 @@ void AppState::recordMidiActivity(
   midiActivityRefreshNeeded_ = true;
 }
 
+void AppState::recordNoteEvent(const NoteEvent& event, uint32_t activityAtMs) {
+  const MidiActivityKind kind =
+      event.type == NoteEventType::NoteOn ? MidiActivityKind::NoteOn
+                                          : MidiActivityKind::NoteOff;
+  recordMidiActivity(
+      kind,
+      event.channel,
+      event.note,
+      event.velocity,
+      activityAtMs);
+}
+
 void AppState::recordControlChange(
     uint8_t channel,
     uint8_t controllerNumber,

@@ -3,6 +3,8 @@
 #include <BLEMIDI_Transport.h>
 #include <hardware/BLEMIDI_ESP32.h>
 
+#include "NoteEvent.h"
+
 namespace {
 constexpr const char* BLE_DEVICE_NAME = "M5 BLE MIDI RX";
 }
@@ -235,25 +237,26 @@ void BleMidiPeripheral::applyPendingMidiActivity() {
       Serial.print(" value=");
       Serial.println(event.bendValue);
     } else {
-      appState_.recordMidiActivity(
-          event.kind,
+      const NoteEvent noteEvent = makeNoteEvent(
+          event.kind == MidiActivityKind::NoteOn ? NoteEventType::NoteOn
+                                                 : NoteEventType::NoteOff,
           event.channel,
           event.data1,
-          event.data2,
-          event.activityAtMs);
+          event.data2);
+      appState_.recordNoteEvent(noteEvent, event.activityAtMs);
 
-      Serial.print("MIDI RX: ");
-      Serial.print(event.kind == MidiActivityKind::NoteOn ? "note_on" : "note_off");
+      Serial.print("MIDI RX: note_event type=");
+      Serial.print(noteEvent.type == NoteEventType::NoteOn ? "note_on" : "note_off");
       Serial.print(" total=");
       Serial.print(appState_.receivedMidiMessageCount());
       Serial.print(" active=");
       Serial.print(appState_.activeNoteCount());
       Serial.print(" channel=");
-      Serial.print(event.channel);
+      Serial.print(noteEvent.channel);
       Serial.print(" note=");
-      Serial.print(event.data1);
+      Serial.print(noteEvent.note);
       Serial.print(" velocity=");
-      Serial.println(event.data2);
+      Serial.println(noteEvent.velocity);
     }
   }
 

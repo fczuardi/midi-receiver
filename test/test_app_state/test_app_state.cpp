@@ -17,6 +17,26 @@ void test_note_on_with_velocity_zero_is_treated_as_note_off() {
   TEST_ASSERT_EQUAL(0, appState.lastMidiVelocity());
 }
 
+void test_note_event_updates_active_notes() {
+  AppState appState;
+  const NoteEvent noteOn = makeNoteEvent(NoteEventType::NoteOn, 1, 60, 96);
+  const NoteEvent noteOff = makeNoteEvent(NoteEventType::NoteOff, 1, 60, 64);
+
+  appState.recordNoteEvent(noteOn, 100);
+
+  TEST_ASSERT_EQUAL(1, appState.activeNoteCount());
+  TEST_ASSERT_EQUAL(MidiActivityKind::NoteOn, appState.lastMidiActivityKind());
+  TEST_ASSERT_EQUAL(1, appState.lastMidiChannel());
+  TEST_ASSERT_EQUAL(60, appState.lastMidiNote());
+  TEST_ASSERT_EQUAL(96, appState.lastMidiVelocity());
+
+  appState.recordNoteEvent(noteOff, 200);
+
+  TEST_ASSERT_EQUAL(0, appState.activeNoteCount());
+  TEST_ASSERT_EQUAL(MidiActivityKind::NoteOff, appState.lastMidiActivityKind());
+  TEST_ASSERT_EQUAL(60, appState.lastMidiNote());
+}
+
 void test_disconnect_clear_removes_active_notes() {
   AppState appState;
 
@@ -87,6 +107,7 @@ void test_pitch_bend_records_centered_value() {
 int main() {
   UNITY_BEGIN();
   RUN_TEST(test_note_on_with_velocity_zero_is_treated_as_note_off);
+  RUN_TEST(test_note_event_updates_active_notes);
   RUN_TEST(test_disconnect_clear_removes_active_notes);
   RUN_TEST(test_active_note_overflow_is_counted);
   RUN_TEST(test_control_change_records_last_controller);

@@ -19,6 +19,7 @@ The firmware:
 - receives and interprets:
   - Note On;
   - Note Off;
+  - typed note events for instrument integration;
   - MIDI channel;
   - note number and musical note name;
   - velocity;
