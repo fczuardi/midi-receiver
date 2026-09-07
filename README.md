@@ -116,7 +116,7 @@ events, and bounded-queue overflow diagnostics.
 Build and test locally with:
 
 ```bash
-env PLATFORMIO_CORE_DIR=.platformio-home pio test -e native
-env PLATFORMIO_CORE_DIR=.platformio-home pio run
-env PLATFORMIO_CORE_DIR=.platformio-home pio pkg pack . --output /tmp
+pio test -e native
+pio run
+pio pkg pack . --output /tmp
 ```
