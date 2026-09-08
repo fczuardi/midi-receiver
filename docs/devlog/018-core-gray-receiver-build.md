@@ -41,3 +41,18 @@ Hardware target:
 pio run -e m5stack-core-gray --target upload
 pio device monitor -e m5stack-core-gray
 ```
+
+Hardware observations:
+
+- The Core Gray receiver firmware booted and advertised as `M5 BLE MIDI RX`.
+- After turning Android Bluetooth off and on again, a fresh scan showed the
+  receiver, connected successfully, and delivered MIDI messages.
+- SynthBridge for Android successfully sent MIDI messages directly from the app.
+- SynthBridge also successfully bridged a USB OTG MIDI controller connected to
+  the phone into BLE MIDI messages received by the Core Gray.
+
+The initial scan confusion appears to have been Android-side BLE cache or scan
+state after the previous M5StickC Plus2 receiver was turned off. The current
+receiver package still uses one advertised name for both boards, so a future
+small slice should make the BLE advertised name configurable per firmware
+target before adding more hardware variants.
