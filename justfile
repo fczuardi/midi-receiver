@@ -6,6 +6,7 @@ package := "packages/ble-midi-input"
 consumer := "ci/consumers/ble-midi-input"
 archive := "/home/fcz/dev/m5stick/.tmp/EmbeddedMusicBleMidiInput-0.1.1.tar.gz"
 board_guard := "scripts/probe-esp32-board.sh"
+uploader := "scripts/upload-receiver.sh"
 
 default:
     @just --list
@@ -16,7 +17,10 @@ test-package:
 test-app:
     pio test -d {{app}} -e native
 
-test: test-package test-app
+test-upload-guard-shell:
+    scripts/test-upload-guard-shell.sh
+
+test: test-package test-app test-upload-guard-shell
 
 build:
     pio run -d {{app}}
@@ -28,10 +32,10 @@ build-gray:
     pio run -d {{app}} -e m5stack-core-gray
 
 upload-plus2:
-    if [ "${M5_SKIP_BOARD_GUARD:-0}" = "1" ]; then pio run -d {{app}} -e m5stick-cplus2 --target upload; else port="$({{board_guard}} --port-for m5stick-cplus2)"; pio run -d {{app}} -e m5stick-cplus2 --target upload --upload-port "$port"; fi
+    {{uploader}} m5stick-cplus2 m5stick-cplus2
 
 upload-gray:
-    if [ "${M5_SKIP_BOARD_GUARD:-0}" = "1" ]; then pio run -d {{app}} -e m5stack-core-gray --target upload; else port="$({{board_guard}} --port-for m5stack-core-gray)"; pio run -d {{app}} -e m5stack-core-gray --target upload --upload-port "$port"; fi
+    {{uploader}} m5stack-core-gray m5stack-core-gray
 
 probe-board:
     {{board_guard}} detect

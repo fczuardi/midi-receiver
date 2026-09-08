@@ -44,10 +44,11 @@ The local app sets BLE advertised names at compile time per environment:
 `M5 Plus2 MIDI RX` for `m5stick-cplus2` and `M5 Gray MIDI RX` for
 `m5stack-core-gray`.
 
-The upload recipes call `scripts/probe-esp32-board.sh` before flashing and pass
-the validated serial port to PlatformIO. Keep that guard conservative: unknown
-probe output should stop the upload until the real hardware output is captured
-and the detector is updated.
+The upload recipes call `scripts/upload-receiver.sh`, which probes with
+`scripts/probe-esp32-board.sh` before flashing and passes the validated serial
+port to PlatformIO. Keep that guard conservative: unknown probe output should
+stop the upload until the real hardware output is captured and the detector is
+updated.
 
 ## Coding Style & Naming Conventions
 
