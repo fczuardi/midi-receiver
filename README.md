@@ -138,8 +138,14 @@ The local app sets the BLE advertised name per firmware environment:
 Flash and monitor a specific board with:
 
 ```bash
+just probe-board
 just upload-plus2
 just monitor-plus2
 just upload-gray
 just monitor-gray
 ```
+
+The upload recipes run a read-only ESP32 probe before flashing, pass the
+validated serial port to PlatformIO, and refuse to continue when the connected
+device does not look like the selected target. Set `M5_SKIP_BOARD_GUARD=1` only
+when deliberately bypassing that check.

@@ -32,6 +32,8 @@ Use `just` recipes from the repository root for common work:
 - `just upload-gray` flashes the connected M5Stack Core Gray.
 - `just monitor-plus2` opens serial logs for the M5StickC Plus2 app env.
 - `just monitor-gray` opens serial logs for the M5Stack Core Gray app env.
+- `just probe-board` runs the read-only ESP32 board-family detection used by
+  guarded upload recipes.
 - `just consumer-build` packs the BLE MIDI input package and builds the CI
   consumer against that archive.
 
@@ -41,6 +43,11 @@ When adding less common commands, use PlatformIO from the repository root with
 The local app sets BLE advertised names at compile time per environment:
 `M5 Plus2 MIDI RX` for `m5stick-cplus2` and `M5 Gray MIDI RX` for
 `m5stack-core-gray`.
+
+The upload recipes call `scripts/probe-esp32-board.sh` before flashing and pass
+the validated serial port to PlatformIO. Keep that guard conservative: unknown
+probe output should stop the upload until the real hardware output is captured
+and the detector is updated.
 
 ## Coding Style & Naming Conventions
 
