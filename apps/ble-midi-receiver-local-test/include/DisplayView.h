@@ -2,7 +2,7 @@
 
 #include "AppState.h"
 
-// Owns all drawing on the built-in M5StickC Plus2 display.
+// Owns all drawing on the built-in M5 display.
 //
 // Keeping display code out of main.cpp makes it easier to change the layout
 // without touching BLE or application state logic.

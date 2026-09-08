@@ -8,12 +8,14 @@
 
 namespace {
 // The BLE-MIDI library creates the advertised device through a static macro.
-// This first reusable package keeps the receiver milestone name; making it
-// configurable should be a separate slice after the package is consumed once.
-constexpr const char* BLE_DEVICE_NAME = "M5 BLE MIDI RX";
+#ifndef BLE_MIDI_DEVICE_NAME
+#define BLE_MIDI_DEVICE_NAME "M5 BLE MIDI RX"
+#endif
+
+constexpr const char* BLE_DEVICE_NAME = BLE_MIDI_DEVICE_NAME;
 }
 
-BLEMIDI_CREATE_INSTANCE("M5 BLE MIDI RX", MIDI)
+BLEMIDI_CREATE_INSTANCE(BLE_MIDI_DEVICE_NAME, MIDI)
 
 BleMidiInput* BleMidiInput::activeInstance_ = nullptr;
 

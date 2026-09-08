@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
   "name": "EmbeddedMusicBleMidiInput",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "BLE MIDI input transport for embedded music experiments",
   "keywords": ["ble", "midi", "embedded", "music"],
   "repository": {
@@ -31,12 +31,11 @@
   },
   "export": {
     "include": [
+      "README.md",
       "include/BleMidiInput.h",
       "include/MidiNoteEventFactory.h",
       "src/BleMidiInput.cpp",
       "src/MidiNoteEventFactory.cpp",
-      "docs/devlog/016-package-ble-midi-input.md",
-      "README.md",
       "library.json"
     ]
   }

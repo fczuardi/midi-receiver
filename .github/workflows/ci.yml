@@ -7,7 +7,7 @@ on:
   pull_request:
 
 env:
-  PLATFORMIO_CORE_DIR: .platformio-home
+  PLATFORMIO_CORE_DIR: ../.platformio-home
 
 jobs:
   firmware-build:
@@ -26,35 +26,38 @@ jobs:
       - name: Cache PlatformIO packages
         uses: actions/cache@v4
         with:
-          path: .platformio-home
-          key: platformio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'boards/*.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
+          path: ../.platformio-home
+          key: platformio-${{ runner.os }}-${{ hashFiles('packages/ble-midi-input/platformio.ini', 'packages/ble-midi-input/library.json', 'apps/ble-midi-receiver-local-test/platformio.ini', 'apps/ble-midi-receiver-local-test/boards/*.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
           restore-keys: |
             platformio-${{ runner.os }}-
 
       - name: Install PlatformIO
         run: pip install platformio==6.1.19
 
-      - name: Run native unit tests
-        run: pio test -e native
+      - name: Run package native tests
+        run: pio test -d packages/ble-midi-input -e native
+
+      - name: Run app native tests
+        run: pio test -d apps/ble-midi-receiver-local-test -e native
 
       - name: Build firmware
-        run: pio run
+        run: pio run -d apps/ble-midi-receiver-local-test
 
       - name: Validate PlatformIO library package
-        run: pio pkg pack . --output /tmp
+        run: pio pkg pack packages/ble-midi-input --output /tmp
 
       - name: Build package consumer
-        run: env BLE_MIDI_INPUT_PACKAGE=file:///tmp/EmbeddedMusicBleMidiInput-0.1.0.tar.gz pio run -d ci/consumers/ble-midi-input
+        run: env BLE_MIDI_INPUT_PACKAGE=file:///tmp/EmbeddedMusicBleMidiInput-0.1.1.tar.gz pio run -d ci/consumers/ble-midi-input
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
           name: m5-ble-midi-receiver-firmware
           path: |
-            .pio/build/m5stick-cplus2/firmware.bin
-            .pio/build/m5stick-cplus2/bootloader.bin
-            .pio/build/m5stick-cplus2/partitions.bin
-            .pio/build/m5stack-core-gray/firmware.bin
-            .pio/build/m5stack-core-gray/bootloader.bin
-            .pio/build/m5stack-core-gray/partitions.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stick-cplus2/firmware.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stick-cplus2/bootloader.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stick-cplus2/partitions.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stack-core-gray/firmware.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stack-core-gray/bootloader.bin
+            apps/ble-midi-receiver-local-test/.pio/build/m5stack-core-gray/partitions.bin
           if-no-files-found: error

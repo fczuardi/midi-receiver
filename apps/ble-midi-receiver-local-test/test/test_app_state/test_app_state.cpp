@@ -1,7 +1,6 @@
 #include <unity.h>
 
 #include "AppState.h"
-#include "MidiNoteEventFactory.h"
 
 void test_note_on_with_velocity_zero_is_treated_as_note_off() {
   AppState appState;
@@ -20,8 +19,8 @@ void test_note_on_with_velocity_zero_is_treated_as_note_off() {
 
 void test_note_event_updates_active_notes() {
   AppState appState;
-  const NoteEvent noteOn = makeNoteEvent(NoteEventType::NoteOn, 1, 60, 96);
-  const NoteEvent noteOff = makeNoteEvent(NoteEventType::NoteOff, 1, 60, 64);
+  const NoteEvent noteOn = {NoteEventType::NoteOn, 1, 60, 96};
+  const NoteEvent noteOff = {NoteEventType::NoteOff, 1, 60, 64};
 
   appState.recordNoteEvent(noteOn, 100);
 

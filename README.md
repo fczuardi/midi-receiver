@@ -35,13 +35,14 @@ The firmware:
   `InstrumentEventSink`;
 - clears pending events and active notes after disconnection.
 
-`BleMidiInput` owns BLE-MIDI transport and shared event production.
-`BleMidiPeripheral` keeps the receiver-specific display and serial diagnostics
-on top of that input layer.
+`BleMidiInput` owns BLE-MIDI transport and shared event production. It lives in
+`packages/ble-midi-input` as the `EmbeddedMusicBleMidiInput` PlatformIO package,
+so another firmware can consume the BLE MIDI transport without importing this
+receiver's display application.
 
-The root `library.json` packages `BleMidiInput` as
-`EmbeddedMusicBleMidiInput`, so another PlatformIO firmware can consume the BLE
-MIDI transport without importing this receiver's display application.
+`BleMidiPeripheral` keeps the receiver-specific display and serial diagnostics
+on top of that input layer. It lives in
+`apps/ble-midi-receiver-local-test`.
 
 No audio synthesis is included.
 
@@ -109,8 +110,10 @@ success criteria.
 
 Use PlatformIO with the Arduino framework.
 
-Keep dependency versions explicit in `platformio.ini` so builds are
-reproducible.
+Keep dependency versions explicit in each `platformio.ini` so builds are
+reproducible. The repository root is an umbrella for packages, apps, CI
+consumers, and documentation; PlatformIO commands should point at the package or
+app directory with `-d`.
 
 Prefer M5Unified for access to the display and buttons.
 
@@ -120,9 +123,15 @@ events, and bounded-queue overflow diagnostics.
 Build and test locally with:
 
 ```bash
-pio test -e native
-pio run
-pio run -e m5stick-cplus2
-pio run -e m5stack-core-gray
-pio pkg pack . --output /tmp
+pio test -d packages/ble-midi-input -e native
+pio test -d apps/ble-midi-receiver-local-test -e native
+pio run -d apps/ble-midi-receiver-local-test
+pio run -d apps/ble-midi-receiver-local-test -e m5stick-cplus2
+pio run -d apps/ble-midi-receiver-local-test -e m5stack-core-gray
+pio pkg pack packages/ble-midi-input --output /home/fcz/dev/m5stick/.tmp
 ```
+
+The local app sets the BLE advertised name per firmware environment:
+
+- `m5stick-cplus2`: `M5 Plus2 MIDI RX`
+- `m5stack-core-gray`: `M5 Gray MIDI RX`
