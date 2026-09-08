@@ -1,19 +1,22 @@
-# M5StickC Plus2 BLE MIDI receiver experiment
+# M5 BLE MIDI receiver experiment
 
 This repository documents a completed experiment to determine whether an
-M5StickC Plus2 can reliably receive and interpret MIDI messages over Bluetooth
-Low Energy.
+M5Stack device can reliably receive and interpret MIDI messages over Bluetooth
+Low Energy. The first hardware target was the M5StickC Plus2; the local receiver
+firmware also builds for the M5Stack Core Gray.
 
 The experiment uses PlatformIO with the Arduino framework.
 
 ## Status
 
 The initial receiver milestone was completed on September 5, 2026 and validated
-on M5StickC Plus2 hardware.
+on M5StickC Plus2 hardware. The same local receiver app now has build coverage
+for the M5Stack Core Gray so downstream Core Gray instrument showcases can reuse
+the same `EmbeddedMusicBleMidiInput` package.
 
 The firmware:
 
-- advertises the M5StickC Plus2 as a BLE MIDI device;
+- advertises the board as a BLE MIDI device;
 - accepts an incoming BLE MIDI connection;
 - displays connection status and received activity;
 - receives and interprets:
@@ -48,6 +51,7 @@ Development history and hardware observations are recorded in
 ## Hardware
 
 - M5StickC Plus2
+- M5Stack Core Gray
 - USB-C cable for power, flashing, and serial logs
 - BLE MIDI source for testing
 
@@ -118,5 +122,7 @@ Build and test locally with:
 ```bash
 pio test -e native
 pio run
+pio run -e m5stick-cplus2
+pio run -e m5stack-core-gray
 pio pkg pack . --output /tmp
 ```

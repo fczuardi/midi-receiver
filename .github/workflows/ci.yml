@@ -27,7 +27,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: .platformio-home
-          key: platformio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'boards/*.json') }}
+          key: platformio-${{ runner.os }}-${{ hashFiles('platformio.ini', 'boards/*.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
           restore-keys: |
             platformio-${{ runner.os }}-
 
@@ -43,53 +43,18 @@ jobs:
       - name: Validate PlatformIO library package
         run: pio pkg pack . --output /tmp
 
-      - name: Build temporary package consumer
-        run: |
-          mkdir -p /tmp/ble-midi-input-consumer/src
-          cat > /tmp/ble-midi-input-consumer/platformio.ini <<'EOF'
-          [env:esp32dev]
-          platform = platformio/espressif32@7.0.1
-          board = esp32dev
-          framework = arduino
-          lib_deps =
-            file://${{ github.workspace }}
-            EmbeddedMusicFirmwareContracts=https://github.com/fczuardi/embedded-music-experiments.git#154035d94df99ab05c3eeb7eb144bf2012972ada
-          lib_ignore =
-            ArduinoBLE
-            Arduino_SpiNINA
-            NimBLE-Arduino
-          EOF
-          cat > /tmp/ble-midi-input-consumer/src/main.cpp <<'EOF'
-          #include <Arduino.h>
-          #include "BleMidiInput.h"
-          #include "PitchBendEvent.h"
-
-          class CapturingInstrumentEventSink : public InstrumentEventSink {
-          public:
-            void onNoteEvent(const NoteEvent&) override {}
-            void onPitchBendEvent(const PitchBendEvent&) override {}
-            void onDisconnected() override {}
-          };
-
-          CapturingInstrumentEventSink sink;
-          BleMidiInput input;
-
-          void setup() {
-            input.setInstrumentEventSink(&sink);
-          }
-
-          void loop() {
-            input.update();
-          }
-          EOF
-          pio run -d /tmp/ble-midi-input-consumer
+      - name: Build package consumer
+        run: env BLE_MIDI_INPUT_PACKAGE=file:///tmp/EmbeddedMusicBleMidiInput-0.1.0.tar.gz pio run -d ci/consumers/ble-midi-input
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4
         with:
-          name: m5stick-cplus2-firmware
+          name: m5-ble-midi-receiver-firmware
           path: |
             .pio/build/m5stick-cplus2/firmware.bin
             .pio/build/m5stick-cplus2/bootloader.bin
             .pio/build/m5stick-cplus2/partitions.bin
+            .pio/build/m5stack-core-gray/firmware.bin
+            .pio/build/m5stack-core-gray/bootloader.bin
+            .pio/build/m5stack-core-gray/partitions.bin
           if-no-files-found: error

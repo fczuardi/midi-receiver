@@ -24,8 +24,9 @@ void setup() {
   displayView.begin();
 
   Serial.println();
-  Serial.println("M5StickC Plus2 BLE MIDI receiver");
+  Serial.println("M5 BLE MIDI receiver");
   Serial.println("Firmware booted");
+  Serial.printf("board_id=%d\n", static_cast<int>(M5.getBoard()));
 
   bleMidiPeripheral.begin();
   displayView.update(appState);

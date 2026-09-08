@@ -2,7 +2,10 @@
 
 ## Project Structure & Module Organization
 
-This repository is an early PlatformIO/Arduino experiment for an M5StickC Plus2 BLE MIDI receiver. At present, `README.md` defines the milestone and hardware assumptions. As firmware is added, use the standard PlatformIO layout:
+This repository is a PlatformIO/Arduino experiment for M5 BLE MIDI receiver
+firmware. The first hardware target was M5StickC Plus2; keep the receiver app
+portable enough to build for M5Stack Core Gray when possible. Use the standard
+PlatformIO layout:
 
 - `platformio.ini` for board, framework, monitor speed, and pinned dependencies.
 - `src/` for application firmware, with `main.cpp` as the entry point.
@@ -17,8 +20,10 @@ Keep BLE MIDI parsing, display rendering, and connection state logic separated e
 
 Use PlatformIO commands from the repository root:
 
-- `pio run` builds the firmware for the configured environment.
-- `pio run -t upload` flashes the connected M5StickC Plus2.
+- `pio run` builds the firmware for the configured default environments.
+- `pio run -e m5stick-cplus2` builds the M5StickC Plus2 firmware.
+- `pio run -e m5stack-core-gray` builds the M5Stack Core Gray firmware.
+- `pio run -t upload` flashes the connected default target.
 - `pio device monitor` opens serial logs for BLE connection and MIDI event debugging.
 - `pio test` runs PlatformIO tests when `test/` exists.
 
