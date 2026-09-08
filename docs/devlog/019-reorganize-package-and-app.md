@@ -33,5 +33,5 @@ pio run -d apps/ble-midi-receiver-local-test -e m5stick-cplus2
 pio run -d apps/ble-midi-receiver-local-test -e m5stack-core-gray
 pio run -d apps/ble-midi-receiver-local-test
 pio pkg pack packages/ble-midi-input --output /home/fcz/dev/m5stick/.tmp
-env BLE_MIDI_INPUT_PACKAGE=file:///home/fcz/dev/m5stick/.tmp/BleMidiInput-0.1.1.tar.gz pio run -d ci/consumers/ble-midi-input
+env BLE_MIDI_INPUT_PACKAGE=file:///home/fcz/dev/m5stick/.tmp/ble-midi-input-0.1.1.tar.gz pio run -d ci/consumers/ble-midi-input
 ```

@@ -1,9 +1,10 @@
 # Slice 022: Rename BLE MIDI Input Package
 
 The reusable BLE MIDI input package no longer uses the temporary
-`EmbeddedMusic` prefix. The package name is now simply:
+`EmbeddedMusic` prefix. The PlatformIO package name now follows the same
+kebab-case convention as the package directory:
 
-- `BleMidiInput`
+- `ble-midi-input`
 
 The path remains `packages/ble-midi-input`, and the public C++ class was
 already named `BleMidiInput`, so this slice only changes PlatformIO package

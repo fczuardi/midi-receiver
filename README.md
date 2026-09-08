@@ -12,7 +12,7 @@ The experiment uses PlatformIO with the Arduino framework.
 The initial receiver milestone was completed on September 5, 2026 and validated
 on M5StickC Plus2 hardware. The same local receiver app now has build coverage
 for the M5Stack Core Gray so downstream Core Gray instrument showcases can reuse
-the same `BleMidiInput` package.
+the same `ble-midi-input` package.
 
 The firmware:
 
@@ -36,7 +36,7 @@ The firmware:
 - clears pending events and active notes after disconnection.
 
 `BleMidiInput` owns BLE-MIDI transport and shared event production. It lives in
-`packages/ble-midi-input` as the `BleMidiInput` PlatformIO package,
+`packages/ble-midi-input` as the `ble-midi-input` PlatformIO package,
 so another firmware can consume the BLE MIDI transport without importing this
 receiver's display application.
 

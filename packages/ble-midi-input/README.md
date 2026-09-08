@@ -1,4 +1,4 @@
-# BleMidiInput
+# ble-midi-input
 
 Reusable BLE MIDI input transport package for embedded music experiments.
 
