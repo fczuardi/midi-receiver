@@ -7,7 +7,7 @@ firmware. The first hardware target was M5StickC Plus2; keep the receiver app
 portable enough to build for M5Stack Core Gray when possible. The repository
 root is an umbrella for packages, apps, CI consumers, and documentation.
 
-- `packages/ble-midi-input/` contains the reusable `EmbeddedMusicBleMidiInput`
+- `packages/ble-midi-input/` contains the reusable `BleMidiInput`
   PlatformIO package and package-owned tests.
 - `apps/ble-midi-receiver-local-test/` contains the M5 display/diagnostic
   receiver firmware and app-owned tests.

@@ -1,6 +1,6 @@
 {
   "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
-  "name": "EmbeddedMusicBleMidiInput",
+  "name": "BleMidiInput",
   "version": "0.1.1",
   "description": "BLE MIDI input transport for embedded music experiments",
   "keywords": ["ble", "midi", "embedded", "music"],
