@@ -123,15 +123,23 @@ events, and bounded-queue overflow diagnostics.
 Build and test locally with:
 
 ```bash
-pio test -d packages/ble-midi-input -e native
-pio test -d apps/ble-midi-receiver-local-test -e native
-pio run -d apps/ble-midi-receiver-local-test
-pio run -d apps/ble-midi-receiver-local-test -e m5stick-cplus2
-pio run -d apps/ble-midi-receiver-local-test -e m5stack-core-gray
-pio pkg pack packages/ble-midi-input --output /home/fcz/dev/m5stick/.tmp
+just test
+just build
+just build-plus2
+just build-gray
+just pack
 ```
 
 The local app sets the BLE advertised name per firmware environment:
 
 - `m5stick-cplus2`: `M5 Plus2 MIDI RX`
 - `m5stack-core-gray`: `M5 Gray MIDI RX`
+
+Flash and monitor a specific board with:
+
+```bash
+just upload-plus2
+just monitor-plus2
+just upload-gray
+just monitor-gray
+```

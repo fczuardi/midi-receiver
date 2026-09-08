@@ -20,21 +20,23 @@ receiver app for a board when only compile-time board settings differ.
 
 ## Build, Test, and Development Commands
 
-Use PlatformIO commands from the repository root with `-d` pointing at the
-package or app:
+Use `just` recipes from the repository root for common work:
 
-- `pio test -d packages/ble-midi-input -e native` runs package tests.
-- `pio test -d apps/ble-midi-receiver-local-test -e native` runs app tests.
-- `pio run -d apps/ble-midi-receiver-local-test` builds all app firmware
-  environments.
-- `pio run -d apps/ble-midi-receiver-local-test -e m5stick-cplus2` builds the
-  M5StickC Plus2 firmware.
-- `pio run -d apps/ble-midi-receiver-local-test -e m5stack-core-gray` builds the
-  M5Stack Core Gray firmware.
-- `pio run -d apps/ble-midi-receiver-local-test -e <env> -t upload` flashes the
-  connected device for the selected environment.
-- `pio device monitor -d apps/ble-midi-receiver-local-test -e <env>` opens
-  serial logs for BLE connection and MIDI event debugging.
+- `just test-package` runs package tests.
+- `just test-app` runs app tests.
+- `just test` runs all native tests.
+- `just build` builds all app firmware environments.
+- `just build-plus2` builds the M5StickC Plus2 firmware.
+- `just build-gray` builds the M5Stack Core Gray firmware.
+- `just upload-plus2` flashes the connected M5StickC Plus2.
+- `just upload-gray` flashes the connected M5Stack Core Gray.
+- `just monitor-plus2` opens serial logs for the M5StickC Plus2 app env.
+- `just monitor-gray` opens serial logs for the M5Stack Core Gray app env.
+- `just consumer-build` packs the BLE MIDI input package and builds the CI
+  consumer against that archive.
+
+When adding less common commands, use PlatformIO from the repository root with
+`-d` pointing at the package or app.
 
 The local app sets BLE advertised names at compile time per environment:
 `M5 Plus2 MIDI RX` for `m5stick-cplus2` and `M5 Gray MIDI RX` for
