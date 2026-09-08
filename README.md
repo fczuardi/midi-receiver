@@ -89,7 +89,7 @@ This experiment does not include:
 
 Future experiments may reuse lessons or code from this repository, but this
 milestone does not define a complete stable library API for downstream projects.
-The current integration contract is the shared `EmbeddedMusicFirmwareContracts`
+The current integration contract is the shared `firmware-contracts`
 PlatformIO package.
 
 ## Prior art

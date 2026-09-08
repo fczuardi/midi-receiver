@@ -25,5 +25,5 @@ just build
 just consumer-build
 ```
 
-The older `EmbeddedMusicFirmwareContracts` dependency name remains for a
-separate naming cleanup slice.
+The older `EmbeddedMusicFirmwareContracts` dependency name was left for a
+separate naming cleanup slice and later renamed to `firmware-contracts`.
