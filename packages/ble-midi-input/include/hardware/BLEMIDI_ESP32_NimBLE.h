@@ -114,7 +114,7 @@ class MyCharacteristicCallbacks : public BLECharacteristicCallbacks {
     std::string rxValue = characteristic->getValue();
     if (!rxValue.empty()) {
       _bluetoothEsp32->receive(
-          reinterpret_cast<uint8_t*>(rxValue.data()),
+          reinterpret_cast<uint8_t*>(&rxValue[0]),
           rxValue.length());
     }
   }

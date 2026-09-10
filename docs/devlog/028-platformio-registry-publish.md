@@ -28,6 +28,11 @@ owns a NimBLE-specific BLE-MIDI backend and includes `NimBLEDevice.h` directly,
 so relying on `BLE-MIDI` to pull NimBLE transitively made the isolated consumer
 too easy to misconfigure.
 
+The isolated consumer also exposed a stricter C++ build path where
+`std::string::data()` returned a const pointer. The NimBLE callback now passes
+the mutable string buffer through `&rxValue[0]` after checking that the value is
+not empty.
+
 ## Rationale
 
 The repository root remains a monorepo host, not a PlatformIO package. The
