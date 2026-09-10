@@ -20,6 +20,26 @@ hardware-visible BLE behavior:
 Do not publish `ble-midi-input@0.2.0` until the hardware scan/connect behavior
 has been revalidated.
 
+## Explore An esp-rs Receiver After PlatformIO Stabilizes
+
+After the current PlatformIO/C++ package path is stable, published, and
+validated through the umbrella showcases, start a separate Rust investigation
+using `esp-rs`.
+
+Keep this out of the current `midi-receiver` package until it proves value. A
+good first shape is a sibling repository, for example `ble-midi-input-rs` or
+`midi-receiver-rs-probe`, with a deliberately small scope:
+
+- boot an ESP32 firmware with the Rust toolchain;
+- advertise a BLE MIDI service with a clear device name;
+- receive raw BLE characteristic writes and log packet bytes;
+- parse Note On/Off only after raw packet reception is proven;
+- compare the resulting boundaries with `ble-midi-input`, without trying to
+  preserve PlatformIO/C++ compatibility.
+
+The goal is a fresh view of the receiver module outside pioarduino, not a
+replacement project until the current package ecosystem has a stable baseline.
+
 ## Extract A Pure Pending Event Dispatcher
 
 `BleMidiPeripheral::update()` currently drains pending BLE MIDI activity,
