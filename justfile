@@ -1,11 +1,11 @@
 export PLATFORMIO_SETTING_ENABLE_TELEMETRY := "no"
-export TMPDIR := "/home/fcz/dev/m5stick/.tmp"
 
 app := "apps/ble-midi-receiver-local-test"
 package := "packages/ble-midi-input"
 consumer := "ci/consumers/ble-midi-input"
-archive := "/home/fcz/dev/m5stick/.tmp/ble-midi-input-0.2.0.tar.gz"
-board_guard := "scripts/probe-esp32-board.sh"
+tmp_dir := ".tmp"
+workspace_tools := env_var_or_default("M5_WORKSPACE_TOOLS_DIR", "../embedded-music-experiments")
+board_guard := workspace_tools + "/scripts/probe-esp32-board.sh"
 uploader := "scripts/upload-receiver.sh"
 
 default:
@@ -32,10 +32,10 @@ build-gray:
     pio run -d {{app}} -e m5stack-core-gray
 
 upload-plus2:
-    {{uploader}} m5stick-cplus2 m5stick-cplus2
+    BOARD_GUARD="{{board_guard}}" {{uploader}} m5stick-cplus2 m5stick-cplus2
 
 upload-gray:
-    {{uploader}} m5stack-core-gray m5stack-core-gray
+    BOARD_GUARD="{{board_guard}}" {{uploader}} m5stack-core-gray m5stack-core-gray
 
 probe-board:
     {{board_guard}} detect
@@ -47,8 +47,9 @@ monitor-gray:
     pio device monitor -d {{app}} -e m5stack-core-gray
 
 pack:
-    mkdir -p /home/fcz/dev/m5stick/.tmp
-    pio pkg pack {{package}} --output /home/fcz/dev/m5stick/.tmp
+    mkdir -p {{tmp_dir}}
+    pio pkg pack {{package}} --output {{tmp_dir}}
 
 consumer-build: pack
-    BLE_MIDI_INPUT_PACKAGE=file://{{archive}} pio run -d {{consumer}}
+    archive="$(pwd)/{{tmp_dir}}/ble-midi-input-0.2.0.tar.gz"; \
+      BLE_MIDI_INPUT_PACKAGE="file://$archive" pio run -d {{consumer}}

@@ -1,4 +1,5 @@
 .pio/
+.tmp/
 .platformio-home/
 .platformio-core/
 apps/*/src/idf_component.yml
