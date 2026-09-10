@@ -51,6 +51,11 @@ BleMidiCharacteristicCallbacks characteristicCallbacks;
 BleMidiInput* BleMidiInput::activeInstance_ = nullptr;
 
 void BleMidiInput::begin() {
+  if (begun_) {
+    return;
+  }
+
+  begun_ = true;
   activeInstance_ = this;
 
   NimBLEDevice::init(BLE_DEVICE_NAME);

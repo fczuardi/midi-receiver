@@ -48,6 +48,7 @@ public:
 class BleMidiInput {
 public:
   // Initialize the BLE stack, create the MIDI GATT service, and advertise it.
+  // Calling begin() more than once has no effect.
   void begin();
 
   // Apply connection changes and drain MIDI events captured by BLE callbacks.
@@ -105,6 +106,7 @@ private:
 
   InstrumentEventSink* instrumentEventSink_ = nullptr;
   BleMidiInputDiagnosticSink* diagnosticSink_ = nullptr;
+  bool begun_ = false;
   bool connected_ = false;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
