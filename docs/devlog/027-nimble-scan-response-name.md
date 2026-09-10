@@ -45,6 +45,10 @@ scan response is enabled. This keeps the primary advertisement focused on the
 BLE MIDI service UUID while giving active scanners a place to read the device
 name.
 
+The package version is bumped to `ble-midi-input@0.1.4` so consumers can pin
+this scan-response behavior separately from the earlier `0.1.3` advertised-name
+attempt.
+
 ## Verification Target
 
 ```bash
