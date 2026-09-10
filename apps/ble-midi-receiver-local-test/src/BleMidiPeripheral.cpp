@@ -39,24 +39,6 @@ void BleMidiPeripheral::onBleMidiDisconnected() {
   appState_.clearActiveNotes();
 }
 
-void BleMidiPeripheral::onBleMidiActiveSensing(
-    uint32_t count,
-    uint32_t activityAtMs) {
-  for (uint32_t index = 0; index < count; ++index) {
-    appState_.recordMidiActivity(
-        MidiActivityKind::ActiveSensing,
-        0,
-        0,
-        0,
-        activityAtMs);
-  }
-
-  Serial.print("MIDI RX: active_sensing=");
-  Serial.print(count);
-  Serial.print(" total=");
-  Serial.println(appState_.receivedMidiMessageCount());
-}
-
 void BleMidiPeripheral::onBleMidiNoteEvent(
     const NoteEvent& event,
     uint32_t activityAtMs) {

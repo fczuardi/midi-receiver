@@ -47,7 +47,7 @@ jobs:
         run: pio pkg pack packages/ble-midi-input --output /tmp
 
       - name: Build package consumer
-        run: env BLE_MIDI_INPUT_PACKAGE=file:///tmp/ble-midi-input-0.1.4.tar.gz pio run -d ci/consumers/ble-midi-input
+        run: env BLE_MIDI_INPUT_PACKAGE=file:///tmp/ble-midi-input-0.2.0.tar.gz pio run -d ci/consumers/ble-midi-input
 
       - name: Upload firmware artifacts
         uses: actions/upload-artifact@v4

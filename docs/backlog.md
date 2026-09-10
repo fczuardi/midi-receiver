@@ -1,28 +1,24 @@
 # Backlog
 
-## Spike: Evaluate ESP32-BLE-MIDI As The Default Transport
+## Validate ESP32-BLE-MIDI Transport On Hardware
 
-`lathoub/BLE-MIDI` was a useful bootstrap dependency, but the current package
-now carries a vendored NimBLE backend to keep BLE-MIDI 2.2 compatible with
-NimBLE-Arduino 2.x and pioarduino. That is a sign that the transport dependency
-may no longer match the project direction.
+`ble-midi-input@0.2.0` now implements the BLE MIDI receiver directly on
+NimBLE-Arduino instead of carrying a vendored backend for `lathoub/BLE-MIDI`.
+The codebase is cleaner: there is no package-local compatibility layer for an
+older transport, no dependency on the non-library-clean
+`max22/ESP32-BLE-MIDI` package, and consumers no longer need `lib_ignore`
+entries to avoid unrelated BLE stacks.
 
-Prioritize a spike to evaluate `max22-/ESP32-BLE-MIDI` as the default backend.
-It is ESP32-focused, NimBLE-based, and appears closer to the hardware/platform
-shape we are actually targeting.
+Before publishing this version to the PlatformIO Registry, validate the
+hardware-visible BLE behavior:
 
-Keep the public `BleMidiInput` contract stable during the spike if possible.
-The evaluation should prove:
-
-- consumer builds no longer need a vendored BLE-MIDI backend;
-- `lib_ignore` can be reduced or removed without selecting the wrong BLE stack;
 - advertised names still appear through scan response;
 - connect, reconnect, disconnection cleanup, notes, velocity, pitch bend, and
-  panic behavior remain compatible with the existing umbrella and AMY consumers;
+  panic behavior work with the existing umbrella and AMY consumers;
 - M5StickC Plus2 and M5Stack Core Gray firmware still build.
 
-Do not publish a new Registry version from this spike until the hardware-visible
-BLE behavior has been revalidated.
+Do not publish `ble-midi-input@0.2.0` until the hardware scan/connect behavior
+has been revalidated.
 
 ## Extract A Pure Pending Event Dispatcher
 

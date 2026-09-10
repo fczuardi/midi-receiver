@@ -12,10 +12,6 @@ uint32_t AppState::receivedMidiMessageCount() const {
   return receivedMidiMessageCount_;
 }
 
-uint32_t AppState::activeSensingMessageCount() const {
-  return activeSensingMessageCount_;
-}
-
 uint32_t AppState::droppedActiveNoteCount() const {
   return droppedActiveNoteCount_;
 }
@@ -136,9 +132,7 @@ void AppState::recordMidiActivity(
   lastMidiVelocity_ = velocity;
   lastMidiActivityAtMs_ = activityAtMs;
 
-  if (kind == MidiActivityKind::ActiveSensing) {
-    activeSensingMessageCount_ += 1;
-  } else if (kind == MidiActivityKind::NoteOn) {
+  if (kind == MidiActivityKind::NoteOn) {
     if (!activeNotes_.contains(channel, note) &&
         activeNotes_.count() >= ActiveNotes::MAX_ACTIVE_NOTES) {
       droppedActiveNoteCount_ += 1;

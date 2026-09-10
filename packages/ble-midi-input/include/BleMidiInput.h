@@ -8,6 +8,9 @@
 
 #include "InstrumentEventSink.h"
 
+class BleMidiCharacteristicCallbacks;
+class BleMidiServerCallbacks;
+
 // Optional diagnostics observer for the BLE MIDI input boundary.
 //
 // Instrument consumers should use InstrumentEventSink. This observer exists so
@@ -20,9 +23,6 @@ public:
   virtual void onBleMidiAdvertising(const char* deviceName) = 0;
   virtual void onBleMidiConnected() = 0;
   virtual void onBleMidiDisconnected() = 0;
-  virtual void onBleMidiActiveSensing(
-      uint32_t count,
-      uint32_t activityAtMs) = 0;
   virtual void onBleMidiNoteEvent(
       const NoteEvent& event,
       uint32_t activityAtMs) = 0;
@@ -51,7 +51,7 @@ public:
   // Initialize the BLE stack, create the MIDI GATT service, and advertise it.
   void begin();
 
-  // Let the BLE-MIDI parser run and drain pending callback events.
+  // Apply connection changes and drain MIDI events captured by BLE callbacks.
   void update();
 
   // Register an optional instrument-event consumer.
@@ -63,6 +63,9 @@ public:
   void setDiagnosticSink(BleMidiInputDiagnosticSink* sink);
 
 private:
+  friend class BleMidiCharacteristicCallbacks;
+  friend class BleMidiServerCallbacks;
+
   enum class PendingMidiEventKind : uint8_t {
     None,
     NoteOn,
@@ -82,14 +85,6 @@ private:
 
   static void handleConnected();
   static void handleDisconnected();
-  static void handleActiveSensing();
-  static void handleNoteOn(uint8_t channel, uint8_t note, uint8_t velocity);
-  static void handleNoteOff(uint8_t channel, uint8_t note, uint8_t velocity);
-  static void handleControlChange(
-      uint8_t channel,
-      uint8_t controllerNumber,
-      uint8_t controllerValue);
-  static void handlePitchBend(uint8_t channel, int bendValue);
 
   static BleMidiInput* activeInstance_;
 
@@ -103,7 +98,8 @@ private:
       uint8_t controllerNumber,
       uint8_t controllerValue);
   void pitchBendReceived(uint8_t channel, int bendValue);
-  void activeSensingReceived();
+  void parseBleMidiPacket(uint8_t* data, size_t size);
+  bool parseMidiMessage(uint8_t status, uint8_t*& cursor, uint8_t* end);
   void applyPendingMidiActivity();
   void discardPendingMidiActivity();
   bool enqueuePendingMidiEvent(const PendingMidiEvent& event);
@@ -113,8 +109,6 @@ private:
   bool connected_ = false;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
-  std::atomic<uint32_t> pendingActiveSensingCount_{0};
-  std::atomic<uint32_t> pendingMidiActivityAtMs_{0};
   std::atomic<uint32_t> droppedPendingMidiEventCount_{0};
 
   static constexpr size_t MAX_PENDING_MIDI_EVENTS = 32;

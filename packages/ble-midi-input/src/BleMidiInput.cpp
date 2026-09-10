@@ -1,56 +1,82 @@
 #include "BleMidiInput.h"
 
 #include <Arduino.h>
-#include <BLEMIDI_Transport.h>
-#if defined(BLE_MIDI_INPUT_USE_CLASSIC_ESP32_BLE)
-#include <hardware/BLEMIDI_ESP32.h>
-#else
 #include <NimBLEDevice.h>
-#if defined(NIMBLE_CPP_VERSION) && \
-    NIMBLE_CPP_VERSION >= NIMBLE_CPP_VERSION_VAL(2, 0, 0)
-#ifndef ESP_LE_AUTH_BOND
-#define ESP_LE_AUTH_BOND 0x01
-#endif
-// BLE-MIDI 2.2 uses the NimBLE-Arduino 1.x security wrapper. NimBLE 2.x moved
-// this operation to NimBLEDevice, so keep the transport source compatible here.
-class NimBLESecurity {
- public:
-  void setAuthenticationMode(uint8_t auth) {
-    NimBLEDevice::setSecurityAuth(auth);
-  }
-};
-#endif
-#include "hardware/BLEMIDI_ESP32_NimBLE.h"
-#endif
 
 #include "MidiNoteEventFactory.h"
 
 namespace {
-// The BLE-MIDI library creates the advertised device through a static macro.
 #ifndef BLE_MIDI_DEVICE_NAME
 #define BLE_MIDI_DEVICE_NAME "M5 BLE MIDI RX"
 #endif
 
 constexpr const char* BLE_DEVICE_NAME = BLE_MIDI_DEVICE_NAME;
+constexpr const char* MIDI_SERVICE_UUID = "03B80E5A-EDE8-4B33-A751-6CE34EC4C700";
+constexpr const char* MIDI_CHARACTERISTIC_UUID = "7772E5DB-3868-4112-A1A9-F2669D106BF3";
+
+int normalizePitchBend(uint16_t bendValue) {
+  return static_cast<int>(bendValue) - 8192;
 }
 
-BLEMIDI_CREATE_INSTANCE(BLE_MIDI_DEVICE_NAME, MIDI)
+}
+
+class BleMidiServerCallbacks : public NimBLEServerCallbacks {
+public:
+  void onConnect(NimBLEServer*, NimBLEConnInfo&) override {
+    BleMidiInput::handleConnected();
+  }
+
+  void onDisconnect(NimBLEServer* server, NimBLEConnInfo&, int) override {
+    BleMidiInput::handleDisconnected();
+    server->startAdvertising();
+  }
+};
+
+class BleMidiCharacteristicCallbacks : public NimBLECharacteristicCallbacks {
+public:
+  void onWrite(NimBLECharacteristic* characteristic, NimBLEConnInfo&) override {
+    std::string value = characteristic->getValue();
+    if (value.empty() || BleMidiInput::activeInstance_ == nullptr) {
+      return;
+    }
+
+    BleMidiInput::activeInstance_->parseBleMidiPacket(
+        reinterpret_cast<uint8_t*>(&value[0]),
+        value.size());
+  }
+};
+
+namespace {
+BleMidiServerCallbacks serverCallbacks;
+BleMidiCharacteristicCallbacks characteristicCallbacks;
+}
 
 BleMidiInput* BleMidiInput::activeInstance_ = nullptr;
 
 void BleMidiInput::begin() {
   activeInstance_ = this;
 
-  BLEMIDI.setHandleConnected(handleConnected);
-  BLEMIDI.setHandleDisconnected(handleDisconnected);
+  NimBLEDevice::init(BLE_DEVICE_NAME);
 
-  MIDI.setHandleActiveSensing(handleActiveSensing);
-  MIDI.setHandleNoteOn(handleNoteOn);
-  MIDI.setHandleNoteOff(handleNoteOff);
-  MIDI.setHandleControlChange(handleControlChange);
-  MIDI.setHandlePitchBend(handlePitchBend);
-  MIDI.begin(MIDI_CHANNEL_OMNI);
-  MIDI.turnThruOff();
+  NimBLEServer* server = NimBLEDevice::createServer();
+  server->setCallbacks(&serverCallbacks);
+  server->advertiseOnDisconnect(true);
+
+  NimBLEService* service = server->createService(NimBLEUUID(MIDI_SERVICE_UUID));
+  NimBLECharacteristic* characteristic = service->createCharacteristic(
+      NimBLEUUID(MIDI_CHARACTERISTIC_UUID),
+      NIMBLE_PROPERTY::READ |
+          NIMBLE_PROPERTY::WRITE |
+          NIMBLE_PROPERTY::NOTIFY |
+          NIMBLE_PROPERTY::WRITE_NR);
+  characteristic->setCallbacks(&characteristicCallbacks);
+
+  NimBLEAdvertising* advertising = server->getAdvertising();
+  advertising->addServiceUUID(service->getUUID());
+  advertising->enableScanResponse(true);
+  advertising->setName(BLE_DEVICE_NAME);
+  advertising->setAppearance(0x00);
+  advertising->start();
 
   if (diagnosticSink_ != nullptr) {
     diagnosticSink_->onBleMidiAdvertising(BLE_DEVICE_NAME);
@@ -87,9 +113,6 @@ void BleMidiInput::update() {
     return;
   }
 
-  // MIDI.read() lets the FortySevenEffects MIDI parser consume bytes delivered
-  // by the BLE-MIDI transport and call our note/real-time handlers.
-  MIDI.read();
   applyPendingMidiActivity();
 }
 
@@ -115,66 +138,6 @@ void BleMidiInput::handleDisconnected() {
   }
 
   activeInstance_->connectionEnded_.store(true);
-}
-
-void BleMidiInput::handleActiveSensing() {
-  if (activeInstance_ == nullptr) {
-    return;
-  }
-
-  activeInstance_->activeSensingReceived();
-}
-
-void BleMidiInput::handleNoteOn(
-    uint8_t channel,
-    uint8_t note,
-    uint8_t velocity) {
-  if (activeInstance_ == nullptr) {
-    return;
-  }
-
-  activeInstance_->noteReceived(
-      PendingMidiEventKind::NoteOn,
-      channel,
-      note,
-      velocity);
-}
-
-void BleMidiInput::handleNoteOff(
-    uint8_t channel,
-    uint8_t note,
-    uint8_t velocity) {
-  if (activeInstance_ == nullptr) {
-    return;
-  }
-
-  activeInstance_->noteReceived(
-      PendingMidiEventKind::NoteOff,
-      channel,
-      note,
-      velocity);
-}
-
-void BleMidiInput::handleControlChange(
-    uint8_t channel,
-    uint8_t controllerNumber,
-    uint8_t controllerValue) {
-  if (activeInstance_ == nullptr) {
-    return;
-  }
-
-  activeInstance_->controlChangeReceived(
-      channel,
-      controllerNumber,
-      controllerValue);
-}
-
-void BleMidiInput::handlePitchBend(uint8_t channel, int bendValue) {
-  if (activeInstance_ == nullptr) {
-    return;
-  }
-
-  activeInstance_->pitchBendReceived(channel, bendValue);
 }
 
 void BleMidiInput::noteReceived(
@@ -222,19 +185,94 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   }
 }
 
-void BleMidiInput::activeSensingReceived() {
-  pendingMidiActivityAtMs_.store(millis());
-  pendingActiveSensingCount_.fetch_add(1);
+void BleMidiInput::parseBleMidiPacket(uint8_t* data, size_t size) {
+  if (size < 3 || (data[0] & 0x80) == 0 || (data[1] & 0x80) == 0) {
+    return;
+  }
+
+  uint8_t* cursor = data + 1;
+  uint8_t* end = data + size;
+  uint8_t runningStatus = 0;
+
+  while (cursor < end) {
+    if ((*cursor & 0x80) != 0) {
+      cursor += 1;
+    }
+
+    if (cursor >= end) {
+      return;
+    }
+
+    if ((*cursor & 0x80) != 0) {
+      runningStatus = *cursor;
+      cursor += 1;
+    }
+
+    if (runningStatus == 0 || !parseMidiMessage(runningStatus, cursor, end)) {
+      return;
+    }
+  }
+}
+
+bool BleMidiInput::parseMidiMessage(uint8_t status, uint8_t*& cursor, uint8_t* end) {
+  const uint8_t command = status >> 4;
+  const uint8_t channel = status & 0x0f;
+
+  switch (command) {
+    case 0x8:
+    case 0x9: {
+      if (end - cursor < 2) {
+        return false;
+      }
+
+      const uint8_t note = cursor[0];
+      const uint8_t velocity = cursor[1];
+      cursor += 2;
+      noteReceived(
+          command == 0x9 ? PendingMidiEventKind::NoteOn
+                         : PendingMidiEventKind::NoteOff,
+          channel,
+          note,
+          velocity);
+      return true;
+    }
+
+    case 0xb: {
+      if (end - cursor < 2) {
+        return false;
+      }
+
+      const uint8_t controllerNumber = cursor[0];
+      const uint8_t controllerValue = cursor[1];
+      cursor += 2;
+      controlChangeReceived(channel, controllerNumber, controllerValue);
+      return true;
+    }
+
+    case 0xe: {
+      if (end - cursor < 2) {
+        return false;
+      }
+
+      const uint16_t bendValue =
+          (static_cast<uint16_t>(cursor[1] & 0x7f) << 7) |
+          static_cast<uint16_t>(cursor[0] & 0x7f);
+      cursor += 2;
+      pitchBendReceived(channel, normalizePitchBend(bendValue));
+      return true;
+    }
+
+    case 0xa:
+    case 0xc:
+    case 0xd:
+      return false;
+
+    default:
+      return false;
+  }
 }
 
 void BleMidiInput::applyPendingMidiActivity() {
-  const uint32_t activeSensingCount = pendingActiveSensingCount_.exchange(0);
-  if (activeSensingCount > 0 && diagnosticSink_ != nullptr) {
-    diagnosticSink_->onBleMidiActiveSensing(
-        activeSensingCount,
-        pendingMidiActivityAtMs_.load());
-  }
-
   std::array<PendingMidiEvent, MAX_PENDING_MIDI_EVENTS> midiEvents{};
   size_t midiEventCount = 0;
 
@@ -299,8 +337,6 @@ void BleMidiInput::applyPendingMidiActivity() {
 }
 
 void BleMidiInput::discardPendingMidiActivity() {
-  pendingActiveSensingCount_.store(0);
-  pendingMidiActivityAtMs_.store(0);
   droppedPendingMidiEventCount_.store(0);
 
   std::lock_guard<std::mutex> lock(pendingMidiEventMutex_);

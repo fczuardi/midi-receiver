@@ -4,7 +4,7 @@ export TMPDIR := "/home/fcz/dev/m5stick/.tmp"
 app := "apps/ble-midi-receiver-local-test"
 package := "packages/ble-midi-input"
 consumer := "ci/consumers/ble-midi-input"
-archive := "/home/fcz/dev/m5stick/.tmp/ble-midi-input-0.1.4.tar.gz"
+archive := "/home/fcz/dev/m5stick/.tmp/ble-midi-input-0.2.0.tar.gz"
 board_guard := "scripts/probe-esp32-board.sh"
 uploader := "scripts/upload-receiver.sh"
 

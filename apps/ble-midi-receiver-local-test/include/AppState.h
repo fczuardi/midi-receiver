@@ -14,7 +14,6 @@ enum class BleConnectionState {
 
 enum class MidiActivityKind {
   None,
-  ActiveSensing,
   NoteOn,
   NoteOff,
   ControlChange,
@@ -34,9 +33,6 @@ public:
 
   // Return how many parsed MIDI messages have arrived since boot.
   uint32_t receivedMidiMessageCount() const;
-
-  // Return how many Active Sensing messages have arrived since boot.
-  uint32_t activeSensingMessageCount() const;
 
   // Return how many Note On events were ignored because the active-note table
   // was already full.
@@ -120,7 +116,6 @@ private:
   BleConnectionState bleConnectionState_ = BleConnectionState::Starting;
   uint32_t uptimeSeconds_ = 0;
   uint32_t receivedMidiMessageCount_ = 0;
-  uint32_t activeSensingMessageCount_ = 0;
   uint32_t droppedActiveNoteCount_ = 0;
   MidiActivityKind lastMidiActivityKind_ = MidiActivityKind::None;
   uint8_t lastMidiChannel_ = 0;

@@ -2,3 +2,4 @@
 .platformio-home/
 .platformio-core/
 apps/*/src/idf_component.yml
+apps/*/src/idf_component.yml.orig

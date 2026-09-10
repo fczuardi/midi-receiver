@@ -26,9 +26,6 @@ private:
   void onBleMidiAdvertising(const char* deviceName) override;
   void onBleMidiConnected() override;
   void onBleMidiDisconnected() override;
-  void onBleMidiActiveSensing(
-      uint32_t count,
-      uint32_t activityAtMs) override;
   void onBleMidiNoteEvent(
       const NoteEvent& event,
       uint32_t activityAtMs) override;

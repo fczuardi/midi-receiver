@@ -204,8 +204,6 @@ const char* DisplayView::midiActivityLabel(MidiActivityKind kind) const {
   switch (kind) {
     case MidiActivityKind::None:
       return "none";
-    case MidiActivityKind::ActiveSensing:
-      return "active";
     case MidiActivityKind::NoteOn:
       return "note on";
     case MidiActivityKind::NoteOff:
