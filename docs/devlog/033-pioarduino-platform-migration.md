@@ -16,3 +16,7 @@ After the migration, the Core Gray firmware was uploaded with `just
 upload-gray` and observed with `just monitor-gray`. The validated behavior was
 preserved: BLE connect and disconnect events, Note On and Note Off, pitch bend,
 and Control Change sustain events were all received and reported correctly.
+
+The same validation was then repeated on the M5StickC Plus2. Upload and
+monitoring worked, the advertised name was correct, and connect, disconnect,
+reconnect, Note On/Off, pitch bend, and sustain on/off all behaved as expected.
