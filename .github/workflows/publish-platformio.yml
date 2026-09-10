@@ -4,7 +4,6 @@ on:
   push:
     tags:
       - "ble-midi-input-v*"
-      - "ble-midi-packet-parser-v*"
 
 env:
   PLATFORMIO_CORE_DIR: ../.platformio-home
@@ -25,16 +24,12 @@ jobs:
           set -euo pipefail
 
           tag="${GITHUB_REF_NAME}"
-          if [[ "$tag" == ble-midi-input-v* ]]; then
-            package="ble-midi-input"
-            version="${tag#ble-midi-input-v}"
-          elif [[ "$tag" == ble-midi-packet-parser-v* ]]; then
-            package="ble-midi-packet-parser"
-            version="${tag#ble-midi-packet-parser-v}"
-          else
+          if [[ "$tag" != ble-midi-input-v* ]]; then
             echo "Unsupported package tag: $tag" >&2
             exit 2
           fi
+          package="ble-midi-input"
+          version="${tag#ble-midi-input-v}"
           manifest="packages/${package}/library.json"
           manifest_version="$(python -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["version"])' "$manifest")"
 
@@ -55,7 +50,7 @@ jobs:
         uses: actions/cache@v4
         with:
           path: ../.platformio-home
-          key: platformio-publish-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('packages/ble-midi-input/platformio.ini', 'packages/ble-midi-input/library.json', 'packages/ble-midi-packet-parser/platformio.ini', 'packages/ble-midi-packet-parser/library.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
+          key: platformio-publish-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('packages/ble-midi-input/platformio.ini', 'packages/ble-midi-input/library.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
           restore-keys: |
             platformio-publish-${{ runner.os }}-
 
@@ -69,7 +64,6 @@ jobs:
         run: pio pkg pack "packages/${{ steps.package.outputs.package }}" --output /tmp
 
       - name: Build isolated consumer
-        if: steps.package.outputs.package == 'ble-midi-input'
         run: env BLE_MIDI_INPUT_PACKAGE="file:///tmp/${{ steps.package.outputs.package }}-${{ steps.package.outputs.version }}.tar.gz" pio run -d ci/consumers/ble-midi-input
 
       - name: Publish package to PlatformIO Registry

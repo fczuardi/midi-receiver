@@ -4,7 +4,7 @@
 #include <NimBLEDevice.h>
 
 #include "MidiNoteEventFactory.h"
-#include <BleMidiPacketParser.h>
+#include "BleMidiPacketDecoder.h"
 
 namespace {
 #ifndef BLE_MIDI_DEVICE_NAME
@@ -182,34 +182,34 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   }
 }
 
-class BleMidiInput::ParsedMessageSink : public BleMidiMessageSink {
+class BleMidiInput::ParsedMessageSink : public MidiMessageSink {
 public:
   explicit ParsedMessageSink(BleMidiInput& input) : input_(input) {
   }
 
-  void onBleMidiMessage(const BleMidiMessage& message) override {
+  void onMidiMessage(const MidiMessage& message) override {
     switch (message.type) {
-      case BleMidiMessageType::NoteOn:
+      case MidiMessageType::NoteOn:
         input_.noteReceived(
             BleMidiInput::PendingMidiEventKind::NoteOn,
             message.channel,
             message.data1,
             message.data2);
         break;
-      case BleMidiMessageType::NoteOff:
+      case MidiMessageType::NoteOff:
         input_.noteReceived(
             BleMidiInput::PendingMidiEventKind::NoteOff,
             message.channel,
             message.data1,
             message.data2);
         break;
-      case BleMidiMessageType::ControlChange:
+      case MidiMessageType::ControlChange:
         input_.controlChangeReceived(
             message.channel,
             message.data1,
             message.data2);
         break;
-      case BleMidiMessageType::PitchBend:
+      case MidiMessageType::PitchBend:
         input_.pitchBendReceived(message.channel, message.bendValue);
         break;
     }
@@ -221,7 +221,7 @@ private:
 
 void BleMidiInput::parseBleMidiPacket(const uint8_t* data, size_t size) {
   ParsedMessageSink sink(*this);
-  BleMidiPacketParser::parse(data, size, sink);
+  BleMidiPacketDecoder::parse(data, size, sink);
 }
 
 void BleMidiInput::applyPendingMidiActivity() {

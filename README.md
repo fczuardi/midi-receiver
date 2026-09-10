@@ -19,17 +19,12 @@ The publishable package lives at:
 
 ```text
 packages/ble-midi-input
-
-The repository also hosts the independent `ble-midi-packet-parser` package at:
-
-```text
-packages/ble-midi-packet-parser
 ```
 
-It currently decodes only the BLE MIDI message types required by the receiver.
-Its deliberately narrow scope is documented in its package README and covered
-by native tests; it can grow as another consumer requires more of the protocol.
-```
+The package keeps its BLE packet decoder and generic MIDI message parser as
+independent, native-testable internal units. They are not separate PlatformIO
+packages yet; their scope can grow as another consumer requires more of the
+protocol.
 
 It provides:
 
@@ -50,7 +45,7 @@ Once the current package version is published to the PlatformIO Registry:
 
 ```ini
 lib_deps =
-  fcz2/ble-midi-input@0.2.0
+  fcz2/ble-midi-input@0.3.0
 ```
 
 During development, consumers can point at the package directory or a packed

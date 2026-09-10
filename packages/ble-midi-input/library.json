@@ -12,14 +12,9 @@
   "platforms": "espressif32",
   "headers": [
     "BleMidiInput.h",
-    "BleMidiPacketParser.h",
     "MidiNoteEventFactory.h"
   ],
   "dependencies": [
-    {
-      "name": "ble-midi-packet-parser",
-      "version": "0.1.0"
-    },
     {
       "name": "firmware-contracts",
       "version": "https://github.com/fczuardi/embedded-music-experiments.git#c9bde598cff9"
@@ -34,6 +29,8 @@
     "srcFilter": [
       "-<*>",
       "+<BleMidiInput.cpp>",
+      "+<BleMidiPacketDecoder.cpp>",
+      "+<MidiMessageParser.cpp>",
       "+<MidiNoteEventFactory.cpp>"
     ]
   },
@@ -43,6 +40,10 @@
       "include/BleMidiInput.h",
       "include/MidiNoteEventFactory.h",
       "src/BleMidiInput.cpp",
+      "include/BleMidiPacketDecoder.h",
+      "include/MidiMessageParser.h",
+      "src/BleMidiPacketDecoder.cpp",
+      "src/MidiMessageParser.cpp",
       "src/MidiNoteEventFactory.cpp",
       "library.json"
     ]
