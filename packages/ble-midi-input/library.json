@@ -10,7 +10,11 @@
   },
   "frameworks": "arduino",
   "platforms": "espressif32",
-  "headers": ["BleMidiInput.h", "MidiNoteEventFactory.h"],
+  "headers": [
+    "BleMidiInput.h",
+    "BleMidiPacketParser.h",
+    "MidiNoteEventFactory.h"
+  ],
   "dependencies": [
     {
       "name": "firmware-contracts",
@@ -26,6 +30,7 @@
     "srcFilter": [
       "-<*>",
       "+<BleMidiInput.cpp>",
+      "+<BleMidiPacketParser.cpp>",
       "+<MidiNoteEventFactory.cpp>"
     ]
   },
@@ -33,8 +38,10 @@
     "include": [
       "README.md",
       "include/BleMidiInput.h",
+      "include/BleMidiPacketParser.h",
       "include/MidiNoteEventFactory.h",
       "src/BleMidiInput.cpp",
+      "src/BleMidiPacketParser.cpp",
       "src/MidiNoteEventFactory.cpp",
       "library.json"
     ]

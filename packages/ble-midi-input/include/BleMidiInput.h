@@ -65,6 +65,7 @@ public:
 private:
   friend class BleMidiCharacteristicCallbacks;
   friend class BleMidiServerCallbacks;
+  class ParsedMessageSink;
 
   enum class PendingMidiEventKind : uint8_t {
     None,
@@ -98,8 +99,7 @@ private:
       uint8_t controllerNumber,
       uint8_t controllerValue);
   void pitchBendReceived(uint8_t channel, int bendValue);
-  void parseBleMidiPacket(uint8_t* data, size_t size);
-  bool parseMidiMessage(uint8_t status, uint8_t*& cursor, uint8_t* end);
+  void parseBleMidiPacket(const uint8_t* data, size_t size);
   void applyPendingMidiActivity();
   void discardPendingMidiActivity();
   bool enqueuePendingMidiEvent(const PendingMidiEvent& event);

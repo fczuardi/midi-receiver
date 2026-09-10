@@ -4,6 +4,7 @@
 #include <NimBLEDevice.h>
 
 #include "MidiNoteEventFactory.h"
+#include "BleMidiPacketParser.h"
 
 namespace {
 #ifndef BLE_MIDI_DEVICE_NAME
@@ -13,10 +14,6 @@ namespace {
 constexpr const char* BLE_DEVICE_NAME = BLE_MIDI_DEVICE_NAME;
 constexpr const char* MIDI_SERVICE_UUID = "03B80E5A-EDE8-4B33-A751-6CE34EC4C700";
 constexpr const char* MIDI_CHARACTERISTIC_UUID = "7772E5DB-3868-4112-A1A9-F2669D106BF3";
-
-int normalizePitchBend(uint16_t bendValue) {
-  return static_cast<int>(bendValue) - 8192;
-}
 
 }
 
@@ -41,7 +38,7 @@ public:
     }
 
     BleMidiInput::activeInstance_->parseBleMidiPacket(
-        reinterpret_cast<uint8_t*>(&value[0]),
+        reinterpret_cast<const uint8_t*>(&value[0]),
         value.size());
   }
 };
@@ -185,91 +182,46 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   }
 }
 
-void BleMidiInput::parseBleMidiPacket(uint8_t* data, size_t size) {
-  if (size < 3 || (data[0] & 0x80) == 0 || (data[1] & 0x80) == 0) {
-    return;
+class BleMidiInput::ParsedMessageSink : public BleMidiMessageSink {
+public:
+  explicit ParsedMessageSink(BleMidiInput& input) : input_(input) {
   }
 
-  uint8_t* cursor = data + 1;
-  uint8_t* end = data + size;
-  uint8_t runningStatus = 0;
-
-  while (cursor < end) {
-    if ((*cursor & 0x80) != 0) {
-      cursor += 1;
-    }
-
-    if (cursor >= end) {
-      return;
-    }
-
-    if ((*cursor & 0x80) != 0) {
-      runningStatus = *cursor;
-      cursor += 1;
-    }
-
-    if (runningStatus == 0 || !parseMidiMessage(runningStatus, cursor, end)) {
-      return;
+  void onBleMidiMessage(const BleMidiMessage& message) override {
+    switch (message.type) {
+      case BleMidiMessageType::NoteOn:
+        input_.noteReceived(
+            BleMidiInput::PendingMidiEventKind::NoteOn,
+            message.channel,
+            message.data1,
+            message.data2);
+        break;
+      case BleMidiMessageType::NoteOff:
+        input_.noteReceived(
+            BleMidiInput::PendingMidiEventKind::NoteOff,
+            message.channel,
+            message.data1,
+            message.data2);
+        break;
+      case BleMidiMessageType::ControlChange:
+        input_.controlChangeReceived(
+            message.channel,
+            message.data1,
+            message.data2);
+        break;
+      case BleMidiMessageType::PitchBend:
+        input_.pitchBendReceived(message.channel, message.bendValue);
+        break;
     }
   }
-}
 
-bool BleMidiInput::parseMidiMessage(uint8_t status, uint8_t*& cursor, uint8_t* end) {
-  const uint8_t command = status >> 4;
-  const uint8_t channel = status & 0x0f;
+private:
+  BleMidiInput& input_;
+};
 
-  switch (command) {
-    case 0x8:
-    case 0x9: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
-      const uint8_t note = cursor[0];
-      const uint8_t velocity = cursor[1];
-      cursor += 2;
-      noteReceived(
-          command == 0x9 ? PendingMidiEventKind::NoteOn
-                         : PendingMidiEventKind::NoteOff,
-          channel,
-          note,
-          velocity);
-      return true;
-    }
-
-    case 0xb: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
-      const uint8_t controllerNumber = cursor[0];
-      const uint8_t controllerValue = cursor[1];
-      cursor += 2;
-      controlChangeReceived(channel, controllerNumber, controllerValue);
-      return true;
-    }
-
-    case 0xe: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
-      const uint16_t bendValue =
-          (static_cast<uint16_t>(cursor[1] & 0x7f) << 7) |
-          static_cast<uint16_t>(cursor[0] & 0x7f);
-      cursor += 2;
-      pitchBendReceived(channel, normalizePitchBend(bendValue));
-      return true;
-    }
-
-    case 0xa:
-    case 0xc:
-    case 0xd:
-      return false;
-
-    default:
-      return false;
-  }
+void BleMidiInput::parseBleMidiPacket(const uint8_t* data, size_t size) {
+  ParsedMessageSink sink(*this);
+  BleMidiPacketParser::parse(data, size, sink);
 }
 
 void BleMidiInput::applyPendingMidiActivity() {
