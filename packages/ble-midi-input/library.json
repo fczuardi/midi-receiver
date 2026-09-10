@@ -20,6 +20,11 @@
       "owner": "lathoub",
       "name": "BLE-MIDI",
       "version": "2.2"
+    },
+    {
+      "owner": "h2zero",
+      "name": "NimBLE-Arduino",
+      "version": "2.5.1"
     }
   ],
   "build": {

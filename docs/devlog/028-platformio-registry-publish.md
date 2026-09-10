@@ -23,6 +23,11 @@ old `0.1.1` filename to the current `0.1.4` package version. The isolated
 consumer now relies on the package manifest to resolve `firmware-contracts`
 instead of declaring that dependency separately.
 
+`NimBLE-Arduino` is also declared as a direct package dependency. The package
+owns a NimBLE-specific BLE-MIDI backend and includes `NimBLEDevice.h` directly,
+so relying on `BLE-MIDI` to pull NimBLE transitively made the isolated consumer
+too easy to misconfigure.
+
 ## Rationale
 
 The repository root remains a monorepo host, not a PlatformIO package. The
