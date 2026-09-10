@@ -1,141 +1,85 @@
-# M5 BLE MIDI receiver experiment
+# midi-receiver
 
-This repository documents a completed experiment to determine whether an
-M5Stack device can reliably receive and interpret MIDI messages over Bluetooth
-Low Energy. The first hardware target was the M5StickC Plus2; the local receiver
-firmware also builds for the M5Stack Core Gray.
+`midi-receiver` hosts `ble-midi-input`, a small PlatformIO package for turning
+BLE MIDI input into reusable embedded music events.
 
-The experiment uses PlatformIO with the Arduino framework.
+The package is meant to be one independent module in a growing set of
+composition-friendly firmware building blocks. A firmware can use it to receive
+BLE MIDI notes, velocity, control changes, pitch bend, and disconnection events
+without also adopting this repository's display demo or any audio backend.
 
-## Status
+The broader composition playground lives in
+[embedded-music-experiments](https://github.com/fczuardi/embedded-music-experiments).
+That umbrella project combines independent modules like this receiver with
+instrument policy, tone output, AMY synthesis, and board-specific showcases.
 
-The initial receiver milestone was completed on September 5, 2026 and validated
-on M5StickC Plus2 hardware. The same local receiver app now has build coverage
-for the M5Stack Core Gray so downstream Core Gray instrument showcases can reuse
-the same `ble-midi-input` package.
+## Package
 
-The firmware:
+The publishable package lives at:
 
-- advertises the board as a BLE MIDI device;
-- accepts an incoming BLE MIDI connection;
-- displays connection status and received activity;
-- receives and interprets:
-  - Note On;
-  - Note Off;
-  - typed note events for instrument integration;
-  - MIDI channel;
-  - note number and musical note name;
-  - velocity;
-  - Control Change messages;
-  - sustain state observed through CC 64;
-  - Pitch Bend;
-- tracks simultaneous active notes across MIDI channels;
-- preserves bursts of events with a bounded queue;
-- can deliver typed note events and disconnection to an optional
-  `InstrumentEventSink`;
-- clears pending events and active notes after disconnection.
+```text
+packages/ble-midi-input
+```
 
-`BleMidiInput` owns BLE-MIDI transport and shared event production. It lives in
-`packages/ble-midi-input` as the `ble-midi-input` PlatformIO package,
-so another firmware can consume the BLE MIDI transport without importing this
-receiver's display application.
+It provides:
 
-`BleMidiPeripheral` keeps the receiver-specific display and serial diagnostics
-on top of that input layer. It lives in
-`apps/ble-midi-receiver-local-test`.
+- BLE MIDI advertising and connection handling on ESP32/NimBLE;
+- typed `NoteEvent` delivery through `InstrumentEventSink`;
+- typed `PitchBendEvent` delivery;
+- Control Change diagnostics for application-level observers;
+- bounded callback-to-loop event buffering;
+- disconnection notification so instruments can clear stuck notes.
 
-No audio synthesis is included.
+`ble-midi-input` depends on the shared contracts from `firmware-contracts`,
+owned by the umbrella repository. MIDI channels are reported as raw MIDI
+status-nibble values, `0..15`.
 
-Development history and hardware observations are recorded in
-[docs/devlog](docs/devlog).
+## Install
 
-## Hardware
+Once the current package version is published to the PlatformIO Registry:
 
-- M5StickC Plus2
-- M5Stack Core Gray
-- USB-C cable for power, flashing, and serial logs
-- BLE MIDI source for testing
+```ini
+lib_deps =
+  fcz2/ble-midi-input@0.2.0
+```
 
-The BLE MIDI source may be a phone, tablet, or computer. A conventional
-USB MIDI controller may also be connected to a phone or tablet through
-USB OTG and routed to the M5StickC Plus2 over BLE MIDI.
+During development, consumers can point at the package directory or a packed
+tarball:
 
-## Completed success criteria
+```ini
+lib_deps =
+  ble-midi-input=file://../../packages/ble-midi-input
+```
 
-The milestone was validated with the following criteria:
+## Apps
 
-- [x] connect and reconnect without rebooting;
-- [x] receive Note On and Note Off events;
-- [x] receive a chord with at least eight simultaneous notes;
-- [x] display received events without noticeable input delay;
-- [x] avoid leaving notes active after a disconnection;
-- [x] run continuously for at least ten minutes without crashing.
+This repository also keeps a local receiver app at:
 
-Native tests cover pure MIDI state logic, and CI runs those tests before
-building the firmware. Hardware-dependent BLE and display behavior remains
-manually validated.
+```text
+apps/ble-midi-receiver-local-test
+```
 
-## Non-goals
+The app is a hardware validation surface for the package. It displays BLE
+connection state and recent MIDI activity on supported M5Stack devices, but it
+is not the reusable contract.
 
-This experiment does not include:
+Current firmware targets:
 
-- audio synthesis;
-- speakers or audio output;
-- SysEx patch handling;
-- a sequencer or arpeggiator;
-- direct USB MIDI input;
-- MIDI over TRS or DIN;
-- product design or custom hardware.
-
-Future experiments may reuse lessons or code from this repository, but this
-milestone does not define a complete stable library API for downstream projects.
-The current integration contract is the shared `firmware-contracts`
-PlatformIO package.
-
-## Prior art
-
-BLE MIDI reception has previously been demonstrated on the original
-M5Stack and M5StickC:
-
-- [M5Stack BLE MIDI receiver (2018)](https://qiita.com/KazuyukiEguchi/items/e166ede5c97438b90187)
-- [M5StickC BLE MIDI receiver (2020)](https://lang-ship.com/blog/work/m5stickc-esp32-ble-midi/)
-- [Bidirectional M5StickC BLE MIDI experiment (2020)](https://pointofviewpoint.linclip.com/archives/3005)
-
-These experiments establish basic feasibility. This repository focuses
-on a reproducible M5StickC Plus2 implementation using current libraries,
-structured MIDI event handling, connection recovery, and explicit
-success criteria.
+- M5StickC Plus2;
+- M5Stack Core Gray.
 
 ## Development
 
-Use PlatformIO with the Arduino framework.
-
-Keep dependency versions explicit in each `platformio.ini` so builds are
-reproducible. The repository root is an umbrella for packages, apps, CI
-consumers, and documentation; PlatformIO commands should point at the package or
-app directory with `-d`.
-
-Prefer M5Unified for access to the display and buttons.
-
-The firmware produces serial logs for connection, disconnection, received MIDI
-events, and bounded-queue overflow diagnostics.
-
-Build and test locally with:
+Common checks:
 
 ```bash
 just test
-just build
+just pack
 just build-plus2
 just build-gray
-just pack
 ```
 
-The local app sets the BLE advertised name per firmware environment:
-
-- `m5stick-cplus2`: `M5 Plus2 MIDI RX`
-- `m5stack-core-gray`: `M5 Gray MIDI RX`
-
-Flash and monitor a specific board with:
+Upload and monitor helpers:
 
 ```bash
 just probe-board
@@ -145,7 +89,5 @@ just upload-gray
 just monitor-gray
 ```
 
-The upload recipes run a read-only ESP32 probe before flashing, pass the
-validated serial port to PlatformIO, and refuse to continue when the connected
-device does not look like the selected target. Set `M5_SKIP_BOARD_GUARD=1` only
-when deliberately bypassing that check.
+Development history, design tradeoffs, and hardware observations are recorded
+in [docs/devlog](docs/devlog).
