@@ -2,7 +2,26 @@
 
 #include <Arduino.h>
 #include <BLEMIDI_Transport.h>
+#if defined(BLE_MIDI_INPUT_USE_CLASSIC_ESP32_BLE)
 #include <hardware/BLEMIDI_ESP32.h>
+#else
+#include <NimBLEDevice.h>
+#if defined(NIMBLE_CPP_VERSION) && \
+    NIMBLE_CPP_VERSION >= NIMBLE_CPP_VERSION_VAL(2, 0, 0)
+#ifndef ESP_LE_AUTH_BOND
+#define ESP_LE_AUTH_BOND 0x01
+#endif
+// BLE-MIDI 2.2 uses the NimBLE-Arduino 1.x security wrapper. NimBLE 2.x moved
+// this operation to NimBLEDevice, so keep the transport source compatible here.
+class NimBLESecurity {
+ public:
+  void setAuthenticationMode(uint8_t auth) {
+    NimBLEDevice::setSecurityAuth(auth);
+  }
+};
+#endif
+#include <hardware/BLEMIDI_ESP32_NimBLE.h>
+#endif
 
 #include "MidiNoteEventFactory.h"
 
