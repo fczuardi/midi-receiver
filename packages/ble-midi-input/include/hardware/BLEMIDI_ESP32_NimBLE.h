@@ -162,6 +162,7 @@ bool BLEMIDI_ESP32_NimBLE::begin(
 
   _advertising = _server->getAdvertising();
   _advertising->addServiceUUID(service->getUUID());
+  _advertising->setName(deviceName);
   _advertising->setAppearance(0x00);
   _advertising->start();
 

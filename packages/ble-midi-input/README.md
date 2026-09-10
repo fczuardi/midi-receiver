@@ -16,7 +16,8 @@ build_flags =
 The package uses a package-owned copy of BLE-MIDI's ESP32 NimBLE backend by
 default. The local copy keeps the BLE-MIDI 2.2 backend aligned with
 NimBLE-Arduino 2.x callback signatures, so modern pioarduino consumers do not
-need app-level BLE transport fixes.
+need app-level BLE transport fixes. The backend also explicitly includes the
+configured device name in the NimBLE advertising data.
 
 A consumer can opt back into the classic ESP32 BLE backend with:
 
