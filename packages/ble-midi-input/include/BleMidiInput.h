@@ -1,11 +1,10 @@
 #pragma once
 
-#include <array>
 #include <atomic>
 #include <cstdint>
-#include <mutex>
 
 #include "InstrumentEventSink.h"
+#include "PendingMidiEventQueue.h"
 
 class BleMidiCharacteristicCallbacks;
 class BleMidiServerCallbacks;
@@ -67,23 +66,6 @@ private:
   friend class BleMidiServerCallbacks;
   class ParsedMessageSink;
 
-  enum class PendingMidiEventKind : uint8_t {
-    None,
-    NoteOn,
-    NoteOff,
-    ControlChange,
-    PitchBend,
-  };
-
-  struct PendingMidiEvent {
-    PendingMidiEventKind kind = PendingMidiEventKind::None;
-    uint8_t channel = 0;
-    uint8_t data1 = 0;
-    uint8_t data2 = 0;
-    int bendValue = 0;
-    uint32_t activityAtMs = 0;
-  };
-
   static void handleConnected();
   static void handleDisconnected();
 
@@ -102,7 +84,6 @@ private:
   void parseBleMidiPacket(const uint8_t* data, size_t size);
   void applyPendingMidiActivity();
   void discardPendingMidiActivity();
-  bool enqueuePendingMidiEvent(const PendingMidiEvent& event);
 
   InstrumentEventSink* instrumentEventSink_ = nullptr;
   BleMidiInputDiagnosticSink* diagnosticSink_ = nullptr;
@@ -110,11 +91,5 @@ private:
   bool connected_ = false;
   std::atomic<bool> connectionStarted_{false};
   std::atomic<bool> connectionEnded_{false};
-  std::atomic<uint32_t> droppedPendingMidiEventCount_{0};
-
-  static constexpr size_t MAX_PENDING_MIDI_EVENTS = 32;
-
-  std::mutex pendingMidiEventMutex_;
-  std::array<PendingMidiEvent, MAX_PENDING_MIDI_EVENTS> pendingMidiEvents_{};
-  size_t pendingMidiEventCount_ = 0;
+  PendingMidiEventQueue pendingMidiEvents_;
 };

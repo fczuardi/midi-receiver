@@ -154,9 +154,7 @@ void BleMidiInput::noteReceived(
   event.data2 = velocity;
   event.activityAtMs = millis();
 
-  if (!enqueuePendingMidiEvent(event)) {
-    droppedPendingMidiEventCount_.fetch_add(1);
-  }
+  pendingMidiEvents_.push(event);
 }
 
 void BleMidiInput::controlChangeReceived(
@@ -170,9 +168,7 @@ void BleMidiInput::controlChangeReceived(
   event.data2 = controllerValue;
   event.activityAtMs = millis();
 
-  if (!enqueuePendingMidiEvent(event)) {
-    droppedPendingMidiEventCount_.fetch_add(1);
-  }
+  pendingMidiEvents_.push(event);
 }
 
 void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
@@ -182,9 +178,7 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   event.bendValue = bendValue;
   event.activityAtMs = millis();
 
-  if (!enqueuePendingMidiEvent(event)) {
-    droppedPendingMidiEventCount_.fetch_add(1);
-  }
+  pendingMidiEvents_.push(event);
 }
 
 class BleMidiInput::ParsedMessageSink : public MidiMessageSink {
@@ -196,14 +190,14 @@ public:
     switch (message.type) {
       case MidiMessageType::NoteOn:
         input_.noteReceived(
-            BleMidiInput::PendingMidiEventKind::NoteOn,
+            PendingMidiEventKind::NoteOn,
             message.channel,
             message.data1,
             message.data2);
         break;
       case MidiMessageType::NoteOff:
         input_.noteReceived(
-            BleMidiInput::PendingMidiEventKind::NoteOff,
+            PendingMidiEventKind::NoteOff,
             message.channel,
             message.data1,
             message.data2);
@@ -230,15 +224,8 @@ void BleMidiInput::parseBleMidiPacket(const uint8_t* data, size_t size) {
 }
 
 void BleMidiInput::applyPendingMidiActivity() {
-  std::array<PendingMidiEvent, MAX_PENDING_MIDI_EVENTS> midiEvents{};
-  size_t midiEventCount = 0;
-
-  {
-    std::lock_guard<std::mutex> lock(pendingMidiEventMutex_);
-    midiEventCount = pendingMidiEventCount_;
-    midiEvents = pendingMidiEvents_;
-    pendingMidiEventCount_ = 0;
-  }
+  std::array<PendingMidiEvent, PendingMidiEventQueue::Capacity> midiEvents{};
+  const size_t midiEventCount = pendingMidiEvents_.drain(midiEvents);
 
   for (size_t index = 0; index < midiEventCount; ++index) {
     const PendingMidiEvent& event = midiEvents[index];
@@ -287,26 +274,12 @@ void BleMidiInput::applyPendingMidiActivity() {
     }
   }
 
-  const uint32_t droppedMidiEvents = droppedPendingMidiEventCount_.exchange(0);
+  const uint32_t droppedMidiEvents = pendingMidiEvents_.takeDroppedCount();
   if (droppedMidiEvents > 0 && diagnosticSink_ != nullptr) {
     diagnosticSink_->onBleMidiDroppedEvents(droppedMidiEvents);
   }
 }
 
 void BleMidiInput::discardPendingMidiActivity() {
-  droppedPendingMidiEventCount_.store(0);
-
-  std::lock_guard<std::mutex> lock(pendingMidiEventMutex_);
-  pendingMidiEventCount_ = 0;
-}
-
-bool BleMidiInput::enqueuePendingMidiEvent(const PendingMidiEvent& event) {
-  std::lock_guard<std::mutex> lock(pendingMidiEventMutex_);
-  if (pendingMidiEventCount_ >= pendingMidiEvents_.size()) {
-    return false;
-  }
-
-  pendingMidiEvents_[pendingMidiEventCount_] = event;
-  pendingMidiEventCount_ += 1;
-  return true;
+  pendingMidiEvents_.clear();
 }
