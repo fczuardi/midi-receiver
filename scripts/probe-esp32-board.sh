@@ -11,8 +11,13 @@ if [[ "$expected_board" == "--port-for" ]]; then
   port="${3:-}"
 fi
 
-esptool_python="/home/fcz/.local/share/pipx/venvs/platformio/bin/python"
-esptool_py="/home/fcz/dev/m5stick/.platformio-home/packages/tool-esptoolpy/esptool.py"
+script_dir="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+repo_dir="$(cd "$script_dir/.." && pwd)"
+workspace_dir="$(cd "$repo_dir/.." && pwd)"
+
+pio_home="${PLATFORMIO_CORE_DIR:-$workspace_dir/.platformio-home}"
+esptool_python="${PLATFORMIO_PYTHON:-$pio_home/penv/bin/python}"
+esptool_py="$pio_home/packages/tool-esptoolpy/esptool.py"
 
 usage() {
   printf 'Usage: %s [m5stick-cplus2|m5stack-core-gray] [serial-port]\n' "$0" >&2
