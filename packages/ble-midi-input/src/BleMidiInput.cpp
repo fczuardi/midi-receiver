@@ -4,7 +4,7 @@
 #include <NimBLEDevice.h>
 
 #include "MidiNoteEventFactory.h"
-#include "BleMidiPacketParser.h"
+#include <BleMidiPacketParser.h>
 
 namespace {
 #ifndef BLE_MIDI_DEVICE_NAME

@@ -2,6 +2,7 @@ export PLATFORMIO_SETTING_ENABLE_TELEMETRY := "no"
 
 app := "apps/ble-midi-receiver-local-test"
 package := "packages/ble-midi-input"
+parser_package := "packages/ble-midi-packet-parser"
 consumer := "ci/consumers/ble-midi-input"
 tmp_dir := ".tmp"
 workspace_tools := env_var_or_default("M5_WORKSPACE_TOOLS_DIR", "../embedded-music-experiments")
@@ -14,13 +15,16 @@ default:
 test-package:
     pio test -d {{package}} -e native
 
+test-parser-package:
+    pio test -d {{parser_package}} -e native
+
 test-app:
     pio test -d {{app}} -e native
 
 test-upload-guard-shell:
     scripts/test-upload-guard-shell.sh
 
-test: test-package test-app test-upload-guard-shell
+test: test-parser-package test-package test-app test-upload-guard-shell
 
 build:
     pio run -d {{app}}
@@ -49,6 +53,10 @@ monitor-gray:
 pack:
     mkdir -p {{tmp_dir}}
     pio pkg pack {{package}} --output {{tmp_dir}}
+
+pack-parser:
+    mkdir -p {{tmp_dir}}
+    pio pkg pack {{parser_package}} --output {{tmp_dir}}
 
 consumer-build: pack
     package_version="$(python3 -c 'import json; print(json.load(open("packages/ble-midi-input/library.json", encoding="utf-8"))["version"])')"; \

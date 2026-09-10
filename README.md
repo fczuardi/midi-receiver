@@ -19,6 +19,16 @@ The publishable package lives at:
 
 ```text
 packages/ble-midi-input
+
+The repository also hosts the independent `ble-midi-packet-parser` package at:
+
+```text
+packages/ble-midi-packet-parser
+```
+
+It currently decodes only the BLE MIDI message types required by the receiver.
+Its deliberately narrow scope is documented in its package README and covered
+by native tests; it can grow as another consumer requires more of the protocol.
 ```
 
 It provides:

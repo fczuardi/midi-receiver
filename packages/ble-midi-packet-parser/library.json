@@ -1,0 +1,23 @@
+{
+  "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
+  "name": "ble-midi-packet-parser",
+  "version": "0.1.0",
+  "description": "Small, testable BLE MIDI packet decoder for embedded applications",
+  "keywords": ["ble", "midi", "embedded", "parser"],
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/fczuardi/midi-receiver.git"
+  },
+  "frameworks": "*",
+  "platforms": "*",
+  "headers": ["BleMidiPacketParser.h"],
+  "build": {"srcFilter": ["+<BleMidiPacketParser.cpp>"]},
+  "export": {
+    "include": [
+      "README.md",
+      "include/BleMidiPacketParser.h",
+      "src/BleMidiPacketParser.cpp",
+      "library.json"
+    ]
+  }
+}

@@ -20,7 +20,6 @@ bool BleMidiPacketParser::parse(
   uint8_t runningStatus = 0;
 
   while (cursor < end) {
-    // Each MIDI message is preceded by a BLE MIDI timestamp byte.
     if ((*cursor & 0x80) != 0) {
       cursor += 1;
     }
@@ -54,60 +53,36 @@ bool BleMidiPacketParser::parseMidiMessage(
   switch (command) {
     case 0x8:
     case 0x9: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
+      if (end - cursor < 2) return false;
       const BleMidiMessage message = {
           command == 0x9 ? BleMidiMessageType::NoteOn
                          : BleMidiMessageType::NoteOff,
-          channel,
-          cursor[0],
-          cursor[1],
-          0,
-      };
+          channel, cursor[0], cursor[1], 0};
       cursor += 2;
       sink.onBleMidiMessage(message);
       return true;
     }
-
     case 0xb: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
+      if (end - cursor < 2) return false;
       const BleMidiMessage message = {
           BleMidiMessageType::ControlChange,
-          channel,
-          cursor[0],
-          cursor[1],
-          0,
-      };
+          channel, cursor[0], cursor[1], 0};
       cursor += 2;
       sink.onBleMidiMessage(message);
       return true;
     }
-
     case 0xe: {
-      if (end - cursor < 2) {
-        return false;
-      }
-
+      if (end - cursor < 2) return false;
       const uint16_t bendValue =
           (static_cast<uint16_t>(cursor[1] & 0x7f) << 7) |
           static_cast<uint16_t>(cursor[0] & 0x7f);
       const BleMidiMessage message = {
           BleMidiMessageType::PitchBend,
-          channel,
-          0,
-          0,
-          normalizePitchBend(bendValue),
-      };
+          channel, 0, 0, normalizePitchBend(bendValue)};
       cursor += 2;
       sink.onBleMidiMessage(message);
       return true;
     }
-
     default:
       return false;
   }

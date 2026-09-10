@@ -1,7 +1,7 @@
 {
   "$schema": "https://raw.githubusercontent.com/platformio/platformio-core/develop/platformio/assets/schema/library.json",
   "name": "ble-midi-input",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "BLE MIDI input transport for embedded music experiments",
   "keywords": ["ble", "midi", "embedded", "music"],
   "repository": {
@@ -17,6 +17,10 @@
   ],
   "dependencies": [
     {
+      "name": "ble-midi-packet-parser",
+      "version": "0.1.0"
+    },
+    {
       "name": "firmware-contracts",
       "version": "https://github.com/fczuardi/embedded-music-experiments.git#c9bde598cff9"
     },
@@ -30,7 +34,6 @@
     "srcFilter": [
       "-<*>",
       "+<BleMidiInput.cpp>",
-      "+<BleMidiPacketParser.cpp>",
       "+<MidiNoteEventFactory.cpp>"
     ]
   },
@@ -38,10 +41,8 @@
     "include": [
       "README.md",
       "include/BleMidiInput.h",
-      "include/BleMidiPacketParser.h",
       "include/MidiNoteEventFactory.h",
       "src/BleMidiInput.cpp",
-      "src/BleMidiPacketParser.cpp",
       "src/MidiNoteEventFactory.cpp",
       "library.json"
     ]
