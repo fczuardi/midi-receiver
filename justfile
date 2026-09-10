@@ -51,5 +51,7 @@ pack:
     pio pkg pack {{package}} --output {{tmp_dir}}
 
 consumer-build: pack
-    archive="$(pwd)/{{tmp_dir}}/ble-midi-input-0.2.0.tar.gz"; \
+    package_version="$(python3 -c 'import json; print(json.load(open("packages/ble-midi-input/library.json", encoding="utf-8"))["version"])')"; \
+      archive="$(pwd)/{{tmp_dir}}/ble-midi-input-$package_version.tar.gz"; \
+      test -f "$archive"; \
       BLE_MIDI_INPUT_PACKAGE="file://$archive" pio run -d {{consumer}}
