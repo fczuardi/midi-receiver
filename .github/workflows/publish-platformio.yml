@@ -1,0 +1,81 @@
+name: Publish PlatformIO package
+
+on:
+  push:
+    tags:
+      - "ble-midi-input-v*"
+
+env:
+  PLATFORMIO_CORE_DIR: ../.platformio-home
+
+jobs:
+  publish:
+    name: Publish ${{ github.ref_name }}
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Resolve package metadata
+        id: package
+        shell: bash
+        run: |
+          set -euo pipefail
+
+          tag="${GITHUB_REF_NAME}"
+          package="ble-midi-input"
+          version="${tag#ble-midi-input-v}"
+          manifest="packages/${package}/library.json"
+          manifest_version="$(python -c 'import json, sys; print(json.load(open(sys.argv[1], encoding="utf-8"))["version"])' "$manifest")"
+
+          if [[ "$tag" != ble-midi-input-v* ]]; then
+            echo "Unsupported package tag: $tag" >&2
+            exit 2
+          fi
+
+          if [[ "$version" != "$manifest_version" ]]; then
+            echo "Tag version '$version' does not match $manifest version '$manifest_version'." >&2
+            exit 1
+          fi
+
+          echo "package=$package" >> "$GITHUB_OUTPUT"
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Cache PlatformIO packages
+        uses: actions/cache@v4
+        with:
+          path: ../.platformio-home
+          key: platformio-publish-${{ runner.os }}-${{ github.ref_name }}-${{ hashFiles('packages/ble-midi-input/platformio.ini', 'packages/ble-midi-input/library.json', 'ci/consumers/ble-midi-input/platformio.ini', 'ci/consumers/ble-midi-input/src/main.cpp') }}
+          restore-keys: |
+            platformio-publish-${{ runner.os }}-
+
+      - name: Install PlatformIO
+        run: pip install platformio==6.1.19
+
+      - name: Run package native tests
+        run: pio test -d packages/ble-midi-input -e native
+
+      - name: Pack package
+        run: pio pkg pack "packages/${{ steps.package.outputs.package }}" --output /tmp
+
+      - name: Build isolated consumer
+        run: env BLE_MIDI_INPUT_PACKAGE="file:///tmp/${{ steps.package.outputs.package }}-${{ steps.package.outputs.version }}.tar.gz" pio run -d ci/consumers/ble-midi-input
+
+      - name: Publish package to PlatformIO Registry
+        env:
+          PLATFORMIO_AUTH_TOKEN: ${{ secrets.PLATFORMIO_AUTH_TOKEN }}
+        run: |
+          set -euo pipefail
+          if [[ -z "${PLATFORMIO_AUTH_TOKEN:-}" ]]; then
+            echo "PLATFORMIO_AUTH_TOKEN secret is required." >&2
+            exit 1
+          fi
+          pio pkg publish "packages/${{ steps.package.outputs.package }}" \
+            --type library \
+            --no-interactive

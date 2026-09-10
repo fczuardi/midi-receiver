@@ -6,6 +6,14 @@ The package owns BLE-MIDI callbacks, pending event buffering, and conversion to
 shared `NoteEvent`, `PitchBendEvent`, and disconnection notifications. It does
 not own display state, receiver diagnostics, or audio output.
 
+Registry consumers can install the package directly once the matching version is
+published:
+
+```ini
+lib_deps =
+  fcz2/ble-midi-input@0.1.4
+```
+
 Consumers can override the advertised BLE name at compile time:
 
 ```ini
