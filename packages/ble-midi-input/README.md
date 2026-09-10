@@ -13,9 +13,12 @@ build_flags =
   -D BLE_MIDI_DEVICE_NAME='"M5 Gray MIDI RX"'
 ```
 
-The package uses BLE-MIDI's ESP32 NimBLE backend by default. That backend is the
-portable path for modern Arduino-ESP32 cores. A consumer can opt back into the
-classic ESP32 BLE backend with:
+The package uses a package-owned copy of BLE-MIDI's ESP32 NimBLE backend by
+default. The local copy keeps the BLE-MIDI 2.2 backend aligned with
+NimBLE-Arduino 2.x callback signatures, so modern pioarduino consumers do not
+need app-level BLE transport fixes.
+
+A consumer can opt back into the classic ESP32 BLE backend with:
 
 ```ini
 build_flags =

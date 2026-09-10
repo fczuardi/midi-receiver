@@ -20,7 +20,7 @@ class NimBLESecurity {
   }
 };
 #endif
-#include <hardware/BLEMIDI_ESP32_NimBLE.h>
+#include "hardware/BLEMIDI_ESP32_NimBLE.h"
 #endif
 
 #include "MidiNoteEventFactory.h"
