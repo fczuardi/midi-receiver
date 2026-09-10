@@ -36,7 +36,7 @@ backend:
 
 ```cpp
 _advertising->addServiceUUID(service->getUUID());
-_advertising->setScanResponse(true);
+_advertising->enableScanResponse(true);
 _advertising->setName(deviceName);
 ```
 
