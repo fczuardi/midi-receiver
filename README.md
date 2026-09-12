@@ -45,7 +45,7 @@ Once the current package version is published to the PlatformIO Registry:
 
 ```ini
 lib_deps =
-  fcz2/ble-midi-input@0.3.0
+  fcz2/ble-midi-input@0.4.0
 ```
 
 During development, consumers can point at the package directory or a packed

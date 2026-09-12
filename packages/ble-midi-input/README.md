@@ -14,7 +14,7 @@ lib_deps =
 ```
 
 For reproducible firmware builds, pin an exact package version instead, for
-example `fcz2/ble-midi-input@0.3.0`.
+example `fcz2/ble-midi-input@0.4.0`.
 
 Consumers can override the advertised BLE name at compile time:
 
