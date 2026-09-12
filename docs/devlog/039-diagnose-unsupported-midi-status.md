@@ -33,8 +33,9 @@ being reported as if it were complete.
 - local M5Stack Core Gray firmware build passed after refreshing the cached
   local package;
 - on hardware, BLE MIDI Engineer generated `Program Change` messages for
-  Distortion Guitar and Electric Grand, and the receiver logged the rejected
-  `0xC0` messages with their raw program bytes;
+  Distortion Guitar and Electric Grand. The receiver logged
+  `raw=C0 1E` and `raw=C0 02`, respectively, confirming both the status and
+  program payload on channel 0;
 - the new `0.3.1` package has not yet been published to the PlatformIO
   Registry.
 
