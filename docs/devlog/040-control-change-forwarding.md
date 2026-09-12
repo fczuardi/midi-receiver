@@ -19,5 +19,7 @@ surface. Existing consumers that ignore this optional event remain valid.
 ## Verification
 
 Native receiver tests cover the shared event shape. The full receiver test
-suite and the firmware build remain the next validation target after the
-updated contract dependency is fetched by PlatformIO.
+suite and both configured firmware builds were subsequently validated after
+PlatformIO fetched the updated contract dependency. Hardware validation also
+confirmed note, velocity, pitch bend, sustain, reconnect, and disconnect
+behavior on the Core Gray and M5StickC Plus2 applications.
