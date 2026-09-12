@@ -30,6 +30,11 @@ Change, and Pitch Bend messages with BLE MIDI timestamps and running status. It
 is intentionally not a complete MIDI 1.0 parser; unsupported system messages
 are rejected rather than exposed as partially interpreted events.
 
+Applications that register a `BleMidiInputDiagnosticSink` also receive the raw
+status byte for unsupported channel or system messages. This is diagnostic
+visibility only: unsupported messages are not queued and are never delivered to
+the instrument-event sink.
+
 Call `begin()` once before entering the application loop and call `update()`
 regularly from that loop. Only one `BleMidiInput` instance may be active at a
 time because NimBLE callbacks are routed through a shared active-instance

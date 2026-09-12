@@ -21,6 +21,11 @@ class MidiMessageSink {
 public:
   virtual ~MidiMessageSink() = default;
   virtual void onMidiMessage(const MidiMessage& message) = 0;
+
+  // Diagnostic hook for status bytes outside the parser's supported subset.
+  // The default keeps existing parser sinks focused on decoded messages.
+  virtual void onUnsupportedStatusByte(uint8_t) {
+  }
 };
 
 // Parses the supported MIDI channel messages from a byte stream.

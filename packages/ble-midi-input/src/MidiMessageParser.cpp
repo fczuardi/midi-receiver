@@ -18,6 +18,7 @@ bool MidiMessageParser::parseByte(uint8_t byte, MidiMessageSink& sink) {
   if ((byte & 0x80) != 0) {
     const uint8_t expectedDataCount = dataCountForStatus(byte);
     if (expectedDataCount == 0) {
+      sink.onUnsupportedStatusByte(byte);
       runningStatus_ = 0;
       dataCount_ = 0;
       expectedDataCount_ = 0;

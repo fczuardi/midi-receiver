@@ -12,6 +12,7 @@ enum class PendingMidiEventKind : uint8_t {
   NoteOff,
   ControlChange,
   PitchBend,
+  UnsupportedStatus,
 };
 
 struct PendingMidiEvent {

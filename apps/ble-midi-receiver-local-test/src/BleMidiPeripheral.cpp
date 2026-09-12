@@ -2,6 +2,29 @@
 
 #include <Arduino.h>
 
+namespace {
+const char* midiCommandName(uint8_t statusByte) {
+  switch (statusByte >> 4) {
+    case 0x8:
+      return "note_off";
+    case 0x9:
+      return "note_on";
+    case 0xa:
+      return "poly_pressure";
+    case 0xb:
+      return "control_change";
+    case 0xc:
+      return "program_change";
+    case 0xd:
+      return "channel_pressure";
+    case 0xe:
+      return "pitch_bend";
+    default:
+      return "system_or_realtime";
+  }
+}
+}
+
 BleMidiPeripheral::BleMidiPeripheral(AppState& appState)
     : appState_(appState) {
 }
@@ -91,6 +114,22 @@ void BleMidiPeripheral::onBleMidiPitchBend(
   Serial.print(channel);
   Serial.print(" value=");
   Serial.println(bendValue);
+}
+
+void BleMidiPeripheral::onBleMidiUnsupportedStatus(uint8_t statusByte) {
+  Serial.print("MIDI RX: unsupported_status=0x");
+  if (statusByte < 0x10) {
+    Serial.print('0');
+  }
+  Serial.print(statusByte, HEX);
+  Serial.print(" command=");
+  Serial.print(midiCommandName(statusByte));
+  if (statusByte < 0xf0) {
+    Serial.print(" channel=");
+    Serial.println(statusByte & 0x0f);
+  } else {
+    Serial.println();
+  }
 }
 
 void BleMidiPeripheral::onBleMidiDroppedEvents(uint32_t droppedEventCount) {

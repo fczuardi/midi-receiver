@@ -181,6 +181,15 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   pendingMidiEvents_.push(event);
 }
 
+void BleMidiInput::unsupportedStatusReceived(uint8_t statusByte) {
+  PendingMidiEvent event;
+  event.kind = PendingMidiEventKind::UnsupportedStatus;
+  event.data1 = statusByte;
+  event.activityAtMs = millis();
+
+  pendingMidiEvents_.push(event);
+}
+
 class BleMidiInput::ParsedMessageSink : public MidiMessageSink {
 public:
   explicit ParsedMessageSink(BleMidiInput& input) : input_(input) {
@@ -214,6 +223,10 @@ public:
     }
   }
 
+  void onUnsupportedStatusByte(uint8_t statusByte) override {
+    input_.unsupportedStatusReceived(statusByte);
+  }
+
 private:
   BleMidiInput& input_;
 };
@@ -230,7 +243,11 @@ void BleMidiInput::applyPendingMidiActivity() {
   for (size_t index = 0; index < midiEventCount; ++index) {
     const PendingMidiEvent& event = midiEvents[index];
 
-    if (event.kind == PendingMidiEventKind::ControlChange) {
+    if (event.kind == PendingMidiEventKind::UnsupportedStatus) {
+      if (diagnosticSink_ != nullptr) {
+        diagnosticSink_->onBleMidiUnsupportedStatus(event.data1);
+      }
+    } else if (event.kind == PendingMidiEventKind::ControlChange) {
       if (diagnosticSink_ != nullptr) {
         diagnosticSink_->onBleMidiControlChange(
             event.channel,
