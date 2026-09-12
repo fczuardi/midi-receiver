@@ -21,6 +21,7 @@ struct PendingMidiEvent {
   uint8_t data1 = 0;
   uint8_t data2 = 0;
   int bendValue = 0;
+  uint8_t dataSize = 0;
   uint32_t activityAtMs = 0;
 };
 

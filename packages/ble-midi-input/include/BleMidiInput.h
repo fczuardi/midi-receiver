@@ -4,6 +4,7 @@
 #include <cstdint>
 
 #include "InstrumentEventSink.h"
+#include "MidiMessageParser.h"
 #include "PendingMidiEventQueue.h"
 
 class BleMidiCharacteristicCallbacks;
@@ -35,7 +36,8 @@ public:
       uint32_t activityAtMs) = 0;
   // Reports rejected MIDI status bytes for receiver diagnostics. These bytes
   // are not queued or delivered to InstrumentEventSink.
-  virtual void onBleMidiUnsupportedStatus(uint8_t statusByte) {
+  virtual void onBleMidiUnsupportedMessage(
+      const UnsupportedMidiMessage&) {
   }
   virtual void onBleMidiDroppedEvents(uint32_t droppedEventCount) = 0;
 };
@@ -85,7 +87,7 @@ private:
       uint8_t controllerNumber,
       uint8_t controllerValue);
   void pitchBendReceived(uint8_t channel, int bendValue);
-  void unsupportedStatusReceived(uint8_t statusByte);
+  void unsupportedMessageReceived(const UnsupportedMidiMessage& message);
   void parseBleMidiPacket(const uint8_t* data, size_t size);
   void applyPendingMidiActivity();
   void discardPendingMidiActivity();

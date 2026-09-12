@@ -17,6 +17,11 @@ struct MidiMessage {
   int bendValue;
 };
 
+struct UnsupportedMidiMessage {
+  uint8_t size = 0;
+  uint8_t bytes[3] = {};
+};
+
 class MidiMessageSink {
 public:
   virtual ~MidiMessageSink() = default;
@@ -24,7 +29,7 @@ public:
 
   // Diagnostic hook for status bytes outside the parser's supported subset.
   // The default keeps existing parser sinks focused on decoded messages.
-  virtual void onUnsupportedStatusByte(uint8_t) {
+  virtual void onUnsupportedMessage(const UnsupportedMidiMessage&) {
   }
 };
 
@@ -43,4 +48,5 @@ private:
   uint8_t dataCount_ = 0;
   uint8_t expectedDataCount_ = 0;
   bool messageInProgress_ = false;
+  bool unsupportedMessage_ = false;
 };

@@ -9,20 +9,21 @@ indication that it had seen such a status byte.
 
 ## Design
 
-`MidiMessageParser` now reports rejected status bytes through a diagnostic hook.
-`BleMidiInput` places that byte in its existing fixed-capacity handoff queue and
-forwards it from `update()` to `BleMidiInputDiagnosticSink`. The local receiver
-app logs its hexadecimal value, command family, and channel when the status is a
-channel message. This keeps serial output and application callbacks out of the
-BLE callback context.
+`MidiMessageParser` now reports rejected MIDI messages through a diagnostic hook.
+`BleMidiInput` places up to three raw MIDI bytes in its existing fixed-capacity
+handoff queue and forwards them from `update()` to
+`BleMidiInputDiagnosticSink`. The local receiver app logs the hexadecimal bytes,
+command family, and channel when the status is a channel message. This keeps
+serial output and application callbacks out of the BLE callback context.
 
 The hook does not change the supported MIDI contract. Program Change, Channel
 Pressure, Polyphonic Pressure, system messages, and realtime statuses remain
 unsupported, are not placed in the pending event queue, and do not reach an
 `InstrumentEventSink`.
 
-The parser test verifies that unsupported status bytes are observable while no
-decoded MIDI message is produced.
+The parser test verifies that complete unsupported messages are observable while
+no decoded MIDI message is produced. It also keeps an incomplete message from
+being reported as if it were complete.
 
 ## Verification
 
@@ -32,8 +33,8 @@ decoded MIDI message is produced.
 - local M5Stack Core Gray firmware build passed after refreshing the cached
   local package;
 - on hardware, BLE MIDI Engineer generated `Program Change` messages for
-  Distortion Guitar and Electric Grand, and the receiver logged
-  `unsupported_status=0xC0 command=program_change channel=0`;
+  Distortion Guitar and Electric Grand, and the receiver logged the rejected
+  `0xC0` messages with their raw program bytes;
 - the new `0.3.1` package has not yet been published to the PlatformIO
   Registry.
 

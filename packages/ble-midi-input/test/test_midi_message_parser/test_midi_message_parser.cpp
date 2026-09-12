@@ -11,14 +11,14 @@ public:
     count += 1;
   }
 
-  void onUnsupportedStatusByte(uint8_t statusByte) override {
-    unsupportedStatusBytes[unsupportedCount] = statusByte;
+  void onUnsupportedMessage(const UnsupportedMidiMessage& message) override {
+    unsupportedMessages[unsupportedCount] = message;
     unsupportedCount += 1;
   }
 
   std::array<MidiMessage, 8> messages{};
   size_t count = 0;
-  std::array<uint8_t, 8> unsupportedStatusBytes{};
+  std::array<UnsupportedMidiMessage, 8> unsupportedMessages{};
   size_t unsupportedCount = 0;
 };
 
@@ -79,15 +79,16 @@ void test_midi_parser_rejects_unsupported_and_incomplete_messages() {
   CapturingMessageSink sink;
   MidiMessageParser parser;
 
-  TEST_ASSERT_FALSE(parser.parseByte(0xc0, sink));
-  TEST_ASSERT_FALSE(parser.parseByte(60, sink));
+  TEST_ASSERT_TRUE(parser.parseByte(0xc0, sink));
+  TEST_ASSERT_TRUE(parser.parseByte(60, sink));
   TEST_ASSERT_TRUE(parser.parseByte(0x90, sink));
   TEST_ASSERT_TRUE(parser.parseByte(60, sink));
-  TEST_ASSERT_FALSE(parser.parseByte(0xc0, sink));
+  TEST_ASSERT_TRUE(parser.parseByte(0xc0, sink));
   TEST_ASSERT_EQUAL_UINT32(0, sink.count);
-  TEST_ASSERT_EQUAL_UINT32(2, sink.unsupportedCount);
-  TEST_ASSERT_EQUAL_UINT8(0xc0, sink.unsupportedStatusBytes[0]);
-  TEST_ASSERT_EQUAL_UINT8(0xc0, sink.unsupportedStatusBytes[1]);
+  TEST_ASSERT_EQUAL_UINT32(1, sink.unsupportedCount);
+  TEST_ASSERT_EQUAL_UINT8(2, sink.unsupportedMessages[0].size);
+  TEST_ASSERT_EQUAL_UINT8(0xc0, sink.unsupportedMessages[0].bytes[0]);
+  TEST_ASSERT_EQUAL_UINT8(60, sink.unsupportedMessages[0].bytes[1]);
 }
 
 int main() {

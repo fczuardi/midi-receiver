@@ -181,10 +181,14 @@ void BleMidiInput::pitchBendReceived(uint8_t channel, int bendValue) {
   pendingMidiEvents_.push(event);
 }
 
-void BleMidiInput::unsupportedStatusReceived(uint8_t statusByte) {
+void BleMidiInput::unsupportedMessageReceived(
+    const UnsupportedMidiMessage& message) {
   PendingMidiEvent event;
   event.kind = PendingMidiEventKind::UnsupportedStatus;
-  event.data1 = statusByte;
+  event.data1 = message.bytes[0];
+  event.data2 = message.bytes[1];
+  event.bendValue = message.bytes[2];
+  event.dataSize = message.size;
   event.activityAtMs = millis();
 
   pendingMidiEvents_.push(event);
@@ -223,8 +227,8 @@ public:
     }
   }
 
-  void onUnsupportedStatusByte(uint8_t statusByte) override {
-    input_.unsupportedStatusReceived(statusByte);
+  void onUnsupportedMessage(const UnsupportedMidiMessage& message) override {
+    input_.unsupportedMessageReceived(message);
   }
 
 private:
@@ -245,7 +249,12 @@ void BleMidiInput::applyPendingMidiActivity() {
 
     if (event.kind == PendingMidiEventKind::UnsupportedStatus) {
       if (diagnosticSink_ != nullptr) {
-        diagnosticSink_->onBleMidiUnsupportedStatus(event.data1);
+        UnsupportedMidiMessage message;
+        message.size = event.dataSize;
+        message.bytes[0] = event.data1;
+        message.bytes[1] = event.data2;
+        message.bytes[2] = static_cast<uint8_t>(event.bendValue);
+        diagnosticSink_->onBleMidiUnsupportedMessage(message);
       }
     } else if (event.kind == PendingMidiEventKind::ControlChange) {
       if (diagnosticSink_ != nullptr) {

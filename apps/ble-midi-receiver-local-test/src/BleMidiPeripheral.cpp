@@ -116,12 +116,19 @@ void BleMidiPeripheral::onBleMidiPitchBend(
   Serial.println(bendValue);
 }
 
-void BleMidiPeripheral::onBleMidiUnsupportedStatus(uint8_t statusByte) {
-  Serial.print("MIDI RX: unsupported_status=0x");
-  if (statusByte < 0x10) {
-    Serial.print('0');
+void BleMidiPeripheral::onBleMidiUnsupportedMessage(
+    const UnsupportedMidiMessage& message) {
+  Serial.print("MIDI RX: unsupported_message raw=");
+  for (uint8_t index = 0; index < message.size; ++index) {
+    if (message.bytes[index] < 0x10) {
+      Serial.print('0');
+    }
+    Serial.print(message.bytes[index], HEX);
+    if (index + 1 < message.size) {
+      Serial.print(' ');
+    }
   }
-  Serial.print(statusByte, HEX);
+  const uint8_t statusByte = message.bytes[0];
   Serial.print(" command=");
   Serial.print(midiCommandName(statusByte));
   if (statusByte < 0xf0) {

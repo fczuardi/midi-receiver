@@ -38,7 +38,8 @@ private:
       uint8_t channel,
       int bendValue,
       uint32_t activityAtMs) override;
-  void onBleMidiUnsupportedStatus(uint8_t statusByte) override;
+  void onBleMidiUnsupportedMessage(
+      const UnsupportedMidiMessage& message) override;
   void onBleMidiDroppedEvents(uint32_t droppedEventCount) override;
 
   AppState& appState_;
