@@ -264,6 +264,14 @@ void BleMidiInput::applyPendingMidiActivity() {
             event.data2,
             event.activityAtMs);
       }
+
+      if (instrumentEventSink_ != nullptr) {
+        instrumentEventSink_->onControlChangeEvent({
+            event.channel,
+            event.data1,
+            event.data2,
+        });
+      }
     } else if (event.kind == PendingMidiEventKind::PitchBend) {
       const PitchBendEvent pitchBendEvent = {
           event.channel,

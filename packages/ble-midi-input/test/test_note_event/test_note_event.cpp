@@ -42,15 +42,22 @@ public:
     lastPitchBendEvent = event;
   }
 
+  void onControlChangeEvent(const ControlChangeEvent& event) override {
+    receivedControlChange = true;
+    lastControlChangeEvent = event;
+  }
+
   void onDisconnected() override {
     disconnected = true;
   }
 
   bool received = false;
   bool receivedPitchBend = false;
+  bool receivedControlChange = false;
   bool disconnected = false;
   NoteEvent lastEvent = {NoteEventType::NoteOff, 0, 0, 0};
   PitchBendEvent lastPitchBendEvent = {0, 0};
+  ControlChangeEvent lastControlChangeEvent = {0, 0, 0};
 };
 
 void test_shared_instrument_event_sink_receives_note_event() {
@@ -77,6 +84,18 @@ void test_shared_instrument_event_sink_receives_pitch_bend_event() {
   TEST_ASSERT_EQUAL_INT16(-1234, sink.lastPitchBendEvent.value);
 }
 
+void test_shared_instrument_event_sink_receives_control_change_event() {
+  CapturingInstrumentEventSink sink;
+  const ControlChangeEvent event = {6, 1, 96};
+
+  sink.onControlChangeEvent(event);
+
+  TEST_ASSERT_TRUE(sink.receivedControlChange);
+  TEST_ASSERT_EQUAL_UINT8(6, sink.lastControlChangeEvent.channel);
+  TEST_ASSERT_EQUAL_UINT8(1, sink.lastControlChangeEvent.controller);
+  TEST_ASSERT_EQUAL_UINT8(96, sink.lastControlChangeEvent.value);
+}
+
 void test_shared_instrument_event_sink_receives_disconnection() {
   CapturingInstrumentEventSink sink;
 
@@ -92,6 +111,7 @@ int main() {
   RUN_TEST(test_note_on_with_velocity_zero_becomes_note_off);
   RUN_TEST(test_shared_instrument_event_sink_receives_note_event);
   RUN_TEST(test_shared_instrument_event_sink_receives_pitch_bend_event);
+  RUN_TEST(test_shared_instrument_event_sink_receives_control_change_event);
   RUN_TEST(test_shared_instrument_event_sink_receives_disconnection);
   return UNITY_END();
 }
